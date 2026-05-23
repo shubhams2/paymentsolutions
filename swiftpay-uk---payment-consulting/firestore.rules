@@ -1,0 +1,22 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 1. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // 2. Primitives & Helpers
+    function isSignedIn() { return request.auth != null; }
+    function isAdmin() { 
+      return isSignedIn() && request.auth.token.email == 'shubhams.job@gmail.com'; 
+    }
+    function incoming() { return request.resource.data; }
+
+    // 3. Flexible Collection Rules for Dual Forms
+    match /leads/{leadId} {
+      allow read, write: if true;
+    }
+  }
+}

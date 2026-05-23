@@ -1,0 +1,32 @@
+{
+  "entities": {
+    "Lead": {
+      "title": "Lead",
+      "description": "A payment solution lead from the landing page contact or consultation booking forms.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "Full name of the contact" },
+        "email": { "type": "string", "description": "Contact email address" },
+        "phone": { "type": "string", "description": "Contact phone number" },
+        "businessName": { "type": "string", "description": "Name of the merchant business" },
+        "businessSize": { "type": "string", "description": "Selected business size or employee count" },
+        "solutionInterest": { "type": "string", "description": "Specific product interest" },
+        "howHeard": { "type": "string", "description": "Lead source tracking" },
+        "message": { "type": "string", "description": "Optional notes from the lead" },
+        "monthlyTurnover": { "type": "string", "description": "Estimated monthly card transaction volume" },
+        "appointmentDate": { "type": "string", "description": "Scheduled date for the consultation call" },
+        "appointmentTime": { "type": "string", "description": "Scheduled time slot for the call" },
+        "source": { "type": "string", "description": "The specific form used (get_in_touch_form or consultation_booking)" },
+        "marketingConsent": { "type": "boolean", "description": "Whether the merchant opted into marketing updates" },
+        "createdAt": { "type": "string", "description": "Timestamp when the lead was generated" }
+      },
+      "required": ["name", "email", "phone"]
+    }
+  },
+  "firestore": {
+    "/leads/{leadId}": {
+      "schema": "Lead",
+      "description": "Collection of incoming leads."
+    }
+  }
+}
