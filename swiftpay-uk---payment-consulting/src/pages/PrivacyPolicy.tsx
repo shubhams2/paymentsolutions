@@ -25,6 +25,7 @@ export default function PrivacyPolicy() {
             <p>For the purpose of UK data protection laws, the data controller is:</p>
             <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 mt-2">
               <p><strong>Business Name:</strong> Phalam Payments UK</p>
+              <p><strong>Legal Status:</strong> Phalam Payments is a trading name of Phalam Corporations Ltd (Company No: 13438074)</p>
               <p><strong>Contact Email:</strong> hello@phalampayments.co.uk</p>
             </div>
           </section>
