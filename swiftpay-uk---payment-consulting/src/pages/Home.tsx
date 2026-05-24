@@ -357,13 +357,13 @@ export default function Home() {
             <div>
               <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 text-white rounded-full text-xs font-semibold uppercase tracking-widest mb-6">
                 <ShieldCheck className="w-3 h-3 text-gold" />
-                The SwiftPay Edge
+                The Phalam Payments Edge
               </div>
               <h2 className="font-display text-4xl sm:text-5xl font-bold text-white mb-6 leading-tight">Expert Guidance, <span className="text-gold italic">Zero Pressure</span></h2>
               <p className="text-blue-100/70 text-lg leading-relaxed mb-10 max-w-xl">
                 Navigating the UK payments landscape is complex. We simplify it. As independent consultants, we work for <strong className="text-white">you</strong> — not the banks or payment providers.
               </p>
-              
+
               <div className="space-y-4 mb-10">
                 {[
                   "No broker fees or hidden consultation costs",
@@ -379,7 +379,7 @@ export default function Home() {
                 ))}
               </div>
 
-              <button 
+              <button
                 onClick={() => setIsScheduleOpen(true)}
                 className="inline-flex items-center gap-3 px-8 py-4 text-base font-bold text-navy-dark bg-gold rounded-xl transition-all shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
               >
@@ -394,7 +394,7 @@ export default function Home() {
                 { title: "Fast Onboarding", desc: "We know time is money. Most of our recommended solutions go live within 48–72 hours.", icon: Clock },
                 { title: "Regulated Partners", desc: "Security is paramount. All solutions are provided through authorised UK regulated entities.", icon: CheckCircle2 }
               ].map((reason, i) => (
-                <motion.div 
+                <motion.div
                   key={i}
                   initial={{ opacity: 0, scale: 0.9 }}
                   whileInView={{ opacity: 1, scale: 1 }}
@@ -419,7 +419,7 @@ export default function Home() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <p className="text-sm font-semibold uppercase tracking-widest text-gold mb-2">How It Works</p>
           <h2 className="font-display text-3xl sm:text-4xl font-bold text-navy mb-14">Simple. Fast. Hassle-Free.</h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
             <div className="hidden md:block absolute top-10 left-[16.66%] right-[16.66%] h-px bg-blue-100" />
             {[
@@ -454,20 +454,20 @@ export default function Home() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
-              { 
-                quote: "SwiftPay UK saved me hours of confusion. They helped me select and integrate a card reader and QR system from a regulated partner that's perfect for my café.",
+              {
+                quote: "Phalam Payments UK saved me hours of confusion. They helped me select and integrate a card reader and QR system from a regulated partner that's perfect for my café.",
                 author: "James Hargreaves",
                 role: "Owner, The Corner Bakery – Manchester",
                 initials: "JH"
               },
-              { 
+              {
                 quote: "The team sourced a payment link solution from a top provider that means I can take deposits from clients without any technical hassle.",
                 author: "Priya Sharma",
                 role: "Freelance Beauty Therapist – London",
                 initials: "PS"
               },
-              { 
-                quote: "We needed a unified POS system. SwiftPay managed the selection and integration process with their partners across all four store sites.",
+              {
+                quote: "We needed a unified POS system. Phalam Payments managed the selection and integration process with their partners across all four store sites.",
                 author: "David Chen",
                 role: "Director, Lotus Retail Group – Birmingham",
                 initials: "DC"
@@ -504,7 +504,7 @@ export default function Home() {
               <p className="text-gray-500 text-base leading-relaxed mb-8">
                 Submit your details and one of our UK specialists will be in touch within one business day. We provide expert technology selection support with no obligation.
               </p>
-              
+
               <div className="space-y-5">
                 <div className="flex items-center gap-4">
                   <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center shrink-0 text-navy">
@@ -521,13 +521,13 @@ export default function Home() {
                   </div>
                   <div>
                     <p className="text-[10px] text-gray-400 font-medium font-semibold uppercase tracking-wider">Email</p>
-                    <p className="text-sm font-semibold text-navy">hello@swiftpayuk.co.uk</p>
+                    <p className="text-sm font-semibold text-navy">hello@phalampayments.co.uk</p>
                   </div>
                 </div>
               </div>
 
               <div className="mt-8 mb-4">
-                <button 
+                <button
                   onClick={() => setIsScheduleOpen(true)}
                   className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-3.5 text-base font-semibold text-navy-dark bg-gold rounded-lg transition-all shadow-lg hover:shadow-xl hover:scale-105"
                 >
@@ -714,7 +714,7 @@ export default function Home() {
                   </div>
                   <h3 className="text-2xl font-bold text-navy mb-4">Enquiry Received</h3>
                   <p className="text-gray-500 text-sm mb-10 leading-relaxed">
-                    Thank you for choosing SwiftPay UK. A consultant will contact you shortly to arrange your free audit.
+                    Thank you for choosing Phalam Payments UK. A consultant will contact you shortly to arrange your free audit.
                   </p>
                   <button
                     onClick={() => setIsSubmitted(false)}

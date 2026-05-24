@@ -13,7 +13,7 @@ export default function CookiePolicy() {
         <div className="prose prose-slate max-w-none text-gray-600 space-y-6">
           <p>Last updated: May 16, 2026</p>
           <p>
-            This Cookie Policy explains how SwiftPay UK uses cookies and similar technologies 
+            This Cookie Policy explains how Phalam Payments UK uses cookies and similar technologies
             on our website.
           </p>
           

@@ -132,7 +132,7 @@ export default function AdminLeads() {
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.setAttribute("download", `swiftpay_leads_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute("download", `phalampayments_leads_${new Date().toISOString().split('T')[0]}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

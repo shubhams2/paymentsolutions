@@ -13,7 +13,7 @@ export function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([
-    { role: "model", parts: [{ text: "Hello! How can SwiftPay UK help you with your payment solutions today?" }] }
+    { role: "model", parts: [{ text: "Hello! How can Phalam Payments UK help you with your payment solutions today?" }] }
   ]);
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -80,14 +80,14 @@ export function ChatWidget() {
                   <Bot className="w-6 h-6 text-gold" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-sm">SwiftPay Assistant</h3>
+                  <h3 className="font-bold text-sm">Phalam Payments Assistant</h3>
                   <div className="flex items-center gap-1.5">
                     <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
                     <span className="text-[10px] text-blue-100 uppercase tracking-widest font-medium">Online</span>
                   </div>
                 </div>
               </div>
-              <button 
+              <button
                 onClick={() => setIsOpen(false)}
                 className="p-1 hover:bg-white/10 rounded-lg transition-colors"
                 id="close-chat"
@@ -157,7 +157,7 @@ export function ChatWidget() {
                 </button>
               </div>
               <p className="text-[10px] text-gray-400 text-center mt-3">
-                Powered by SwiftPay UK AI
+                Powered by Phalam Payments UK AI
               </p>
             </form>
           </motion.div>

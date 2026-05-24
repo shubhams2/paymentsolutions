@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
 import { ChatWidget } from "./components/ChatWidget";
+import { LeadCaptureModal } from "./components/LeadCaptureModal";
 import Home from "./pages/Home";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfUse from "./pages/TermsOfUse";
@@ -40,6 +41,7 @@ export default function App() {
         </main>
         <Footer />
         <ChatWidget />
+        <LeadCaptureModal />
       </div>
     </BrowserRouter>
   );

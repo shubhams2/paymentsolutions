@@ -13,7 +13,7 @@ export default function TermsOfUse() {
         <div className="prose prose-slate max-w-none text-gray-600 space-y-6">
           <p>Last updated: May 16, 2026</p>
           <p>
-            Welcome to SwiftPay UK. By accessing or using our website, you agree to comply with 
+            Welcome to Phalam Payments UK. By accessing or using our website, you agree to comply with
             and be bound by these Terms of Use.
           </p>
           

@@ -14,7 +14,7 @@ export default function PrivacyPolicy() {
         
         <div className="prose prose-slate max-w-none text-gray-600 space-y-8 leading-relaxed">
           <p>
-            This Privacy Policy explains how <strong>SwiftPay UK</strong> ("we", "our", or "us") collects, uses, shares, and protects your personal data when you visit our website, use our portal, or fill out our "Get in Touch" and consultation scheduling forms.
+            This Privacy Policy explains how <strong>Phalam Payments UK</strong> ("we", "our", or "us") collects, uses, shares, and protects your personal data when you visit our website, use our portal, or fill out our "Get in Touch" and consultation scheduling forms.
           </p>
           <p>
             We operate strictly within the United Kingdom and process all personal data in full compliance with the UK General Data Protection Regulation (UK GDPR) and the Data Protection Act 2018.
@@ -24,8 +24,8 @@ export default function PrivacyPolicy() {
             <h2 className="text-2xl font-bold text-navy mb-4">1. The Controller of Your Data</h2>
             <p>For the purpose of UK data protection laws, the data controller is:</p>
             <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 mt-2">
-              <p><strong>Business Name:</strong> SwiftPay UK</p>
-              <p><strong>Contact Email:</strong> hello@swiftpayuk.co.uk</p>
+              <p><strong>Business Name:</strong> Phalam Payments UK</p>
+              <p><strong>Contact Email:</strong> hello@phalampayments.co.uk</p>
             </div>
           </section>
 
@@ -113,7 +113,7 @@ export default function PrivacyPolicy() {
               <li><strong>The Right to Object/Restrict:</strong> You can object to us processing your data or ask us to stop sending marketing communication.</li>
             </ul>
             <p className="mt-4">
-              To exercise any of these rights, please contact us immediately at <strong>hello@swiftpayuk.co.uk</strong>. If you are unhappy with how we handle your data, you have the right to lodge a complaint with the Information Commissioner’s Office (ICO) (www.ico.org.uk).
+              To exercise any of these rights, please contact us immediately at <strong>hello@phalampayments.co.uk</strong>. If you are unhappy with how we handle your data, you have the right to lodge a complaint with the Information Commissioner’s Office (ICO) (www.ico.org.uk).
             </p>
           </section>
         </div>

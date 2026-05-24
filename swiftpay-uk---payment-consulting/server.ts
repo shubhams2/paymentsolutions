@@ -44,9 +44,9 @@ if (projectId) {
 const db = (function() {
   if (!projectId) return null;
   const app = admin.apps[0];
-  
+
   const dbId = (databaseId === "(default)" || !databaseId) ? undefined : databaseId;
-  
+
   try {
     console.log(`[Firebase] Initializing Firestore. Project: ${projectId}, Database: ${dbId || "(default)"}`);
     return getFirestoreAdmin(app, dbId);
@@ -87,36 +87,40 @@ function getTransporter() {
 }
 
 async function sendConfirmationEmail(to: string, name: string, turnover?: string, phone?: string) {
-  const businessName = "SwiftPay UK";
-  const websiteLink = "https://swiftpayuk.co.uk";
-  
+  if (to && (to.endsWith("@swiftpayuk-lead.co.uk") || to.includes("@no-email.swiftpayuk-lead.co.uk") || to.endsWith("@phalampayments-lead.co.uk") || to.includes("@no-email.phalampayments-lead.co.uk") || to.includes("no-email"))) {
+    console.log(`Skipping confirmation email to dummy address: ${to}`);
+    return;
+  }
+  const businessName = "Phalam Payments UK";
+  const websiteLink = "https://phalampayments.co.uk";
+
   const subject = `${businessName} – Your Payment Technology Audit Request`;
-  
+
   const htmlContent = `
     <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333; line-height: 1.6;">
       <p>Hi ${name},</p>
       <p>Thank you for reaching out to <strong>${businessName}</strong>. We have successfully received your request for a tailored payment technology review.</p>
       <p>As an independent consulting partner, our goal is simple: to audit your current configuration and connect your business with the most cost-effective, secure, and modern payment infrastructure available on the market.</p>
       <p>Because we are entirely independent, we don’t force you into a single system. We work directly with leading, FCA-regulated UK and global networks to find the exact configuration that fits your business model.</p>
-      
+
       <h3 style="color: #1a4aa8; margin-top: 25px;">What happens next?</h3>
       <ul style="padding-left: 20px;">
         <li style="margin-bottom: 10px;"><strong>Initial Analysis:</strong> We are currently reviewing your trading profile and estimated monthly card turnover (<strong>${turnover || "Not provided"}</strong>).</li>
         <li style="margin-bottom: 10px;"><strong>Consultation Call:</strong> A specialist from our team will contact you within 1 business day via <strong>${to}${phone ? ' or ' + phone : ''}</strong> to discuss your tailored integration options (including POS hardware, Payment Links, or Open Banking solutions).</li>
       </ul>
-      
+
       <p>In the meantime, if you have any additional notes or specific hardware requirements you would like to add, simply reply directly to this email.</p>
       <p>We look forward to optimizing your checkout experience.</p>
-      
+
       <p style="margin-top: 30px;">Kind regards,</p>
       <p>
-        <strong>SwiftPay UK Team</strong><br>
+        <strong>Phalam Payments UK Team</strong><br>
         Independent Payment Technology Consultants<br>
         <a href="${websiteLink}" style="color: #1a4aa8; text-decoration: none;">${websiteLink}</a>
       </p>
-      
+
       <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;" />
-      
+
       <p style="font-size: 11px; color: #888; border-left: 3px solid #eee; padding-left: 10px; font-style: italic;">
         <strong>Legal Footer Disclaimer:</strong><br>
         ${businessName} is an independent payment technology consultancy and systems integrator. We are not a bank or an FCA-regulated financial institution. All merchant accounts, card processing services, and financial transactions are provided exclusively by our fully authorized and regulated partner networks.
@@ -125,7 +129,7 @@ async function sendConfirmationEmail(to: string, name: string, turnover?: string
   `;
 
   const mailOptions = {
-    from: process.env.EMAIL_FROM || `${businessName} <hello@swiftpayuk.co.uk>`,
+    from: process.env.EMAIL_FROM || `${businessName} <hello@phalampayments.co.uk>`,
     to,
     subject,
     html: htmlContent,
@@ -149,8 +153,8 @@ async function sendConfirmationEmail(to: string, name: string, turnover?: string
 
 async function sendAdminNotification(leadData: any) {
   const mailOptions = {
-    from: process.env.EMAIL_FROM || "SwiftPay UK <hello@swiftpayuk.co.uk>",
-    to: process.env.ADMIN_EMAIL || process.env.EMAIL_FROM || "admin@swiftpayuk.co.uk",
+    from: process.env.EMAIL_FROM || "Phalam Payments UK <hello@phalampayments.co.uk>",
+    to: process.env.ADMIN_EMAIL || process.env.EMAIL_FROM || "admin@phalampayments.co.uk",
     subject: "NEW LEAD: ChatBot enquiry received",
     html: `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #0d2f6e;">
@@ -221,16 +225,16 @@ async function startServer() {
   // Unified Leads/Booking Route
   app.post("/api/leads", async (req, res) => {
     try {
-      const { 
-        name, 
-        email, 
-        phone, 
-        businessName, 
-        businessSize, 
+      const {
+        name,
+        email,
+        phone,
+        businessName,
+        businessSize,
         monthlyTurnover,
-        solutionInterest, 
-        howHeard, 
-        message, 
+        solutionInterest,
+        howHeard,
+        message,
         marketingConsent,
         appointmentDate,
         appointmentTime,
@@ -238,27 +242,29 @@ async function startServer() {
         source = "web_form"
       } = req.body;
 
-      if (!email || !name) {
-        return res.status(400).json({ error: "Missing email or name" });
+      if (!name) {
+        return res.status(400).json({ error: "Missing name" });
       }
 
+      const effectiveEmail = email || `phone-lead-${phone?.replace(/[^0-9]/g, '') || Date.now()}@phalampayments-lead.co.uk`;
+
       // No database save, only email notifications
-      console.log("Lead received:", { name, email, source });
+      console.log("Lead received:", { name, email: effectiveEmail, source });
 
       // Send confirmation email (async)
-      sendConfirmationEmail(email, name, monthlyTurnover, phone).catch(console.error);
-      
+      sendConfirmationEmail(effectiveEmail, name, monthlyTurnover, phone).catch(console.error);
+
       // Send admin notification (async)
       const adminOptions = {
-        from: process.env.EMAIL_FROM || "SwiftPay UK <hello@swiftpayuk.co.uk>",
-        to: process.env.ADMIN_EMAIL || process.env.EMAIL_FROM || "admin@swiftpayuk.co.uk",
+        from: process.env.EMAIL_FROM || "Phalam Payments UK <hello@phalampayments.co.uk>",
+        to: process.env.ADMIN_EMAIL || process.env.EMAIL_FROM || "admin@phalampayments.co.uk",
         subject: appointmentDate ? `NEW BOOKING: ${name} scheduled a consultation` : `NEW LEAD: Enquiry from ${name}`,
         html: `
           <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #0d2f6e;">
             <h2 style="color: #1a4aa8;">${appointmentDate ? "New Consultation Booking" : "New Website Enquiry"}</h2>
             <div style="background: #f9f9f9; padding: 15px; border-radius: 8px; border: 1px solid #eee;">
               <p><strong>Name:</strong> ${name}</p>
-              <p><strong>Email:</strong> ${email}</p>
+              <p><strong>Email:</strong> ${effectiveEmail}</p>
               <p><strong>Phone:</strong> ${phone || "Not provided"}</p>
               <p><strong>Business:</strong> ${businessName || "Not provided"}</p>
               <p><strong>Monthly Turnover:</strong> ${monthlyTurnover || "Not provided"}</p>
@@ -298,25 +304,25 @@ async function startServer() {
   app.post("/api/chat", async (req, res) => {
     try {
       const { message, history } = req.body;
-      
+
       const chat = ai.chats.create({
         model: "gemini-3-flash-preview",
         config: {
-          systemInstruction: "You are a customer support agent for SwiftPay UK. You are helpful, professional, and knowledgeable about payment solutions. SwiftPay is an independent consultancy helping UK businesses find the best card readers, POS, and QR code payments. \n\nIMPORTANT: If a user expresses interest in a consultation, audit, or want to speak with an expert, you should proactively ask for their Name, Email, and optionally Phone, Business Name, and Estimated Monthly Card Turnover. Once you have at least Name and Email, use the 'submitLead' tool to register their interest. After calling the tool, confirm to the user that their details have been received and a specialist will contact them within 24 hours.",
+          systemInstruction: "You are a customer support agent for Phalam Payments UK. You are helpful, professional, and knowledgeable about payment solutions. Phalam Payments is an independent consultancy helping UK businesses find the best card readers, POS, and QR code payments. \n\nIMPORTANT: If a user expresses interest in a consultation, audit, or want to speak with an expert, you should proactively ask for their Name, Email, and optionally Phone, Business Name, and Estimated Monthly Card Turnover. Once you have at least Name and Email, use the 'submitLead' tool to register their interest. After calling the tool, confirm to the user that their details have been received and a specialist will contact them within 24 hours.",
           tools: [{ functionDeclarations: [submitLeadTool] }]
         },
         history: history || [],
       });
 
       const response = await chat.sendMessage({ message });
-      
+
       // Handle tool calls
       if (response.functionCalls) {
         for (const call of response.functionCalls) {
           if (call.name === "submitLead") {
             const leadData = call.args;
             console.log("ChatBot captured lead:", leadData);
-            
+
             // Save to Database
             if (projectId) {
               try {
@@ -345,11 +351,11 @@ async function startServer() {
             } else {
               console.log("MOCK DB SAVE: ", leadData);
             }
-            
+
             // Send notifications (async)
             sendConfirmationEmail(leadData.email as string, leadData.name as string, leadData.monthlyTurnover as string, leadData.phone as string).catch(console.error);
             sendAdminNotification(leadData).catch(console.error);
-            
+
             // Respond to the tool
             const toolResponse = await chat.sendMessage({
               message: {

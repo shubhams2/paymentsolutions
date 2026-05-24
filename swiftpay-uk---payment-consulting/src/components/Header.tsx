@@ -57,15 +57,15 @@ export function Header() {
               <CreditCard className="w-5 h-5 text-white" />
             </div>
             <div className="leading-tight">
-              <span className="font-display font-bold text-lg text-navy">SwiftPay</span>
+              <span className="font-display font-bold text-lg text-navy">Phalam Payments</span>
               <span className="font-inter font-semibold text-lg text-gold ml-0.5"> UK</span>
             </div>
           </Link>
 
           <nav className="hidden md:flex items-center gap-6">
             {navLinks.map((link) => (
-              <a 
-                key={link.name} 
+              <a
+                key={link.name}
                 href={link.href}
                 className="text-sm font-medium text-gray-600 hover:text-navy transition-colors"
                 onClick={(e) => {
@@ -78,15 +78,7 @@ export function Header() {
                 {link.name}
               </a>
             ))}
-            {isAdmin && (
-              <Link 
-                to="/admin"
-                className="text-sm font-bold text-gold hover:text-navy transition-colors"
-              >
-                Admin
-              </Link>
-            )}
-            <Link 
+            <Link
               to="/#contact"
               className="ml-2 inline-flex items-center px-5 py-2 text-sm font-semibold text-white rounded-lg bg-navy hover:brightness-110 transition-all"
               onClick={(e) => {
@@ -100,7 +92,7 @@ export function Header() {
             </Link>
           </nav>
 
-          <button 
+          <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             className="md:hidden p-2 rounded-md text-gray-600 hover:text-navy"
           >
@@ -134,15 +126,6 @@ export function Header() {
                   {link.name}
                 </a>
               ))}
-              {isAdmin && (
-                <Link
-                  to="/admin"
-                  onClick={() => setIsMenuOpen(false)}
-                  className="block text-2xl font-bold text-gold py-4 border-b border-gray-100"
-                >
-                  Admin Portal
-                </Link>
-              )}
               <Link
                 to="/#contact"
                 onClick={(e) => {
