@@ -11,7 +11,7 @@ export default function PrivacyPolicy() {
       >
         <h1 className="font-display text-4xl font-bold text-navy mb-4">Privacy Policy</h1>
         <p className="text-gray-500 mb-8">Last Updated: May 2026</p>
-        
+
         <div className="prose prose-slate max-w-none text-gray-600 space-y-8 leading-relaxed">
           <p>
             This Privacy Policy explains how <strong>Phalam Payments UK</strong> ("we", "our", or "us") collects, uses, shares, and protects your personal data when you visit our website, use our portal, or fill out our "Get in Touch" and consultation scheduling forms.
@@ -26,7 +26,7 @@ export default function PrivacyPolicy() {
             <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 mt-2">
               <p><strong>Business Name:</strong> Phalam Payments UK</p>
               <p><strong>Legal Status:</strong> Phalam Payments is a trading name of Phalam Corporations Ltd (Company No: 13438074)</p>
-              <p><strong>Contact Email:</strong> hello@phalampayments.co.uk</p>
+              <p><strong>Contact Email:</strong> sales@phalampayments.co.uk</p>
             </div>
           </section>
 
@@ -114,7 +114,7 @@ export default function PrivacyPolicy() {
               <li><strong>The Right to Object/Restrict:</strong> You can object to us processing your data or ask us to stop sending marketing communication.</li>
             </ul>
             <p className="mt-4">
-              To exercise any of these rights, please contact us immediately at <strong>hello@phalampayments.co.uk</strong>. If you are unhappy with how we handle your data, you have the right to lodge a complaint with the Information Commissioner’s Office (ICO) (www.ico.org.uk).
+              To exercise any of these rights, please contact us immediately at <strong>sales@phalampayments.co.uk</strong>. If you are unhappy with how we handle your data, you have the right to lodge a complaint with the Information Commissioner’s Office (ICO) (www.ico.org.uk).
             </p>
           </section>
         </div>

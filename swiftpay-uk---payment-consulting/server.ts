@@ -112,24 +112,31 @@ async function sendConfirmationEmail(to: string, name: string, turnover?: string
       <p>In the meantime, if you have any additional notes or specific hardware requirements you would like to add, simply reply directly to this email.</p>
       <p>We look forward to optimizing your checkout experience.</p>
 
-      <p style="margin-top: 30px;">Kind regards,</p>
-      <p>
-        <strong>Phalam Payments UK Team</strong><br>
-        Independent Payment Technology Consultants<br>
-        <a href="${websiteLink}" style="color: #1a4aa8; text-decoration: none;">${websiteLink}</a>
+      <p style="margin-top: 30px; margin-bottom: 20px; font-size: 14px; color: #333;">Kind regards,</p>
+
+      <p style="margin: 0; font-size: 15px; color: #333;"><strong>Shubham Garg</strong></p>
+      <p style="margin: 0 0 15px 0; font-size: 13px; color: #666;">Managing Consultant | Phalam Payments</p>
+
+      <p style="margin: 0; font-size: 13px; color: #555; line-height: 1.5;">
+        <strong>M:</strong> +44 7448 558053<br>
+        <strong>E:</strong> <a href="mailto:sales@phalampayments.co.uk" style="color: #1a4aa8; text-decoration: none;">sales@phalampayments.co.uk</a><br>
+        <strong>W:</strong> <a href="https://phalampayments.co.uk" style="color: #1a4aa8; text-decoration: none;">https://phalampayments.co.uk</a>
       </p>
 
-      <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;" />
+      <p style="margin: 20px 0; font-size: 11px; color: #999; font-family: monospace;">
+        ----------------------------------------------------------------------<br>
+        Independent Payment Technology Consultants & Systems Integrators<br>
+        ----------------------------------------------------------------------
+      </p>
 
-      <p style="font-size: 11px; color: #888; border-left: 3px solid #eee; padding-left: 10px; font-style: italic;">
-        <strong>Legal Footer Disclaimer:</strong><br>
-        ${businessName} is an independent payment technology consultancy and systems integrator. We are not a bank or an FCA-regulated financial institution. All merchant accounts, card processing services, and financial transactions are provided exclusively by our fully authorized and regulated partner networks.
+      <p style="font-size: 11px; color: #888; border-left: 3px solid #eee; padding-left: 10px; font-style: italic; line-height: 1.4;">
+        <strong>Legal Disclaimer:</strong> Phalam Payments is an independent technology consultancy. We are not a bank or an FCA-regulated financial institution. All merchant accounts, card processing services, and financial transactions are provided exclusively by our fully authorized and regulated partner networks.
       </p>
     </div>
   `;
 
   const mailOptions = {
-    from: process.env.EMAIL_FROM || `${businessName} <hello@phalampayments.co.uk>`,
+    from: process.env.EMAIL_FROM || `${businessName} <sales@phalampayments.co.uk>`,
     to,
     subject,
     html: htmlContent,
@@ -153,7 +160,7 @@ async function sendConfirmationEmail(to: string, name: string, turnover?: string
 
 async function sendAdminNotification(leadData: any) {
   const mailOptions = {
-    from: process.env.EMAIL_FROM || "Phalam Payments UK <hello@phalampayments.co.uk>",
+    from: process.env.EMAIL_FROM || "Phalam Payments UK <sales@phalampayments.co.uk>",
     to: process.env.ADMIN_EMAIL || process.env.EMAIL_FROM || "admin@phalampayments.co.uk",
     subject: "NEW LEAD: ChatBot enquiry received",
     html: `
@@ -256,7 +263,7 @@ async function startServer() {
 
       // Send admin notification (async)
       const adminOptions = {
-        from: process.env.EMAIL_FROM || "Phalam Payments UK <hello@phalampayments.co.uk>",
+        from: process.env.EMAIL_FROM || "Phalam Payments UK <sales@phalampayments.co.uk>",
         to: process.env.ADMIN_EMAIL || process.env.EMAIL_FROM || "admin@phalampayments.co.uk",
         subject: appointmentDate ? `NEW BOOKING: ${name} scheduled a consultation` : `NEW LEAD: Enquiry from ${name}`,
         html: `

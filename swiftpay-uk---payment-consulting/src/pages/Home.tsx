@@ -512,7 +512,7 @@ export default function Home() {
                   </div>
                   <div>
                     <p className="text-[10px] text-gray-400 font-medium font-semibold uppercase tracking-wider">Phone</p>
-                    <p className="text-sm font-semibold text-navy">+44 (0) 800 123 4567</p>
+                    <p className="text-sm font-semibold text-navy">+44-7448558053</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
@@ -521,7 +521,7 @@ export default function Home() {
                   </div>
                   <div>
                     <p className="text-[10px] text-gray-400 font-medium font-semibold uppercase tracking-wider">Email</p>
-                    <p className="text-sm font-semibold text-navy">hello@phalampayments.co.uk</p>
+                    <p className="text-sm font-semibold text-navy">sales@phalampayments.co.uk</p>
                   </div>
                 </div>
               </div>
