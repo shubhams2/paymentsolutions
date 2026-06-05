@@ -79,7 +79,7 @@ export default function Home() {
 
       // Step B: Immediately after Firebase write, call local fetch POST to `/functions/leads`
       try {
-        const response = await fetch("/functions/leads", {
+        const response = await fetch("/leads", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
