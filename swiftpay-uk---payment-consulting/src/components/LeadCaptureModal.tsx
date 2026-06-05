@@ -91,18 +91,25 @@ export function LeadCaptureModal() {
       });
 
       // 2. Api Backend Lead processing & Notifications
-      await fetch("/api/leads", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: name.trim(),
-          phone: phone.trim(),
-          email: generatedEmail,
-          source: "scroll_popup",
-        }),
-      });
+      try {
+        const response = await fetch("/functions/leads", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: name.trim(),
+            phone: phone.trim(),
+            email: generatedEmail,
+            source: "scroll_popup",
+          }),
+        });
+        if (!response.ok) {
+          console.warn("Cloudflare Pages Function request failed in LeadCaptureModal:", response.status);
+        }
+      } catch (fetchErr) {
+        console.warn("Warning: Cloudflare Pages Function '/functions/leads' request failed in LeadCaptureModal:", fetchErr);
+      }
 
       setIsSuccess(true);
       localStorage.setItem("lead_popup_submitted", "true");

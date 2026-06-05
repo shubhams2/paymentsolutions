@@ -105,22 +105,29 @@ export function ScheduleModal({ isOpen, onClose }: ScheduleModalProps) {
         throw new Error(`Database error: ${dbError.message}`);
       }
 
-      const response = await fetch("/api/leads", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...data,
-          appointmentDate: format(selectedDate, "PPP"),
-          appointmentTime: selectedTime,
-          source: "consultation_booking",
-        }),
-      });
+      try {
+        const response = await fetch("/functions/leads", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ...data,
+            appointmentDate: format(selectedDate, "PPP"),
+            appointmentTime: selectedTime,
+            source: "consultation_booking",
+          }),
+        });
 
-      if (response.ok) {
+        if (response.ok) {
+          setStep("success");
+        } else {
+          console.warn("Cloudflare Pages Function request failed in ScheduleModal:", response.status);
+          // Still mark as successful since Firestore document was written successfully!
+          setStep("success");
+        }
+      } catch (fetchErr) {
+        console.warn("Warning: Cloudflare Pages Function '/functions/leads' email trigger failed in ScheduleModal:", fetchErr);
+        // Continue and succeed since DB write was successful
         setStep("success");
-      } else {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Booking failed");
       }
     } catch (error: any) {
       console.error("Booking error:", error);

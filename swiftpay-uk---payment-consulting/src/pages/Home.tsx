@@ -70,36 +70,38 @@ export default function Home() {
     setIsSubmitting(true);
     setSubmitError(null);
     try {
-      try {
-        await addDoc(collection(db, "leads"), {
-          ...data,
-          source: "get_in_touch_form",
-          createdAt: serverTimestamp(),
-        });
-      } catch (dbError: any) {
-        console.error("Firestore Client save failed:", dbError);
-        throw new Error(`Database error: ${dbError.message}`);
-      }
-
-      const response = await fetch("/api/leads", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...data,
-          source: "get_in_touch_form",
-        }),
+      // Step A: Natively push the form inputs (data) to Firebase Firestore
+      await addDoc(collection(db, "leads"), {
+        ...data,
+        source: "get_in_touch_form",
+        createdAt: serverTimestamp(),
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to submit");
+      // Step B: Immediately after Firebase write, call local fetch POST to `/functions/leads`
+      try {
+        const response = await fetch("/functions/leads", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ...data,
+            source: "get_in_touch_form",
+          }),
+        });
+        if (!response.ok) {
+          console.warn("Cloudflare Pages Function backup lead request failed with status:", response.status);
+        }
+      } catch (fetchErr) {
+        console.warn("Warning: Cloudflare Pages Function '/functions/leads' email trigger failed:", fetchErr);
+        // Continue allowed by requirement
       }
 
-      setIsSubmitted(true);
+      // Step C: Clear form, clear loading, set success
       reset();
+      setIsSubmitting(false);
+      setIsSubmitted(true);
     } catch (error: any) {
       console.error("Submission error:", error);
-      setSubmitError(error.message || "Issue submitting request. Please try again.");
-    } finally {
+      setSubmitError(error.message || "There was an issue processing your request. Please try again.");
       setIsSubmitting(false);
     }
   };
@@ -110,7 +112,7 @@ export default function Home() {
       <section id="hero" className="relative min-h-screen flex items-center overflow-hidden pt-16" style={{ background: "linear-gradient(135deg, #0d2f6e 0%, #1a4aa8 60%, #0d2f6e 100%)" }}>
         <div className="absolute -top-32 -right-32 w-[500px] h-[500px] rounded-full opacity-10" style={{ background: "radial-gradient(circle, #e8a800, transparent 70%)" }}></div>
         <div className="absolute -bottom-40 -left-20 w-[400px] h-[400px] rounded-full opacity-10" style={{ background: "radial-gradient(circle, white, transparent 70%)" }}></div>
-        
+
         <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-20 w-full">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <motion.div
@@ -129,7 +131,7 @@ export default function Home() {
                 Whether you need card payments, QR code checkouts, payment links or a full POS system — we guide UK merchants and individuals to the right solution, every time.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
-                <button 
+                <button
                   onClick={() => setIsScheduleOpen(true)}
                   className="inline-flex items-center justify-center gap-2 px-7 py-3.5 text-base font-semibold text-navy-dark bg-gold rounded-lg transition-all shadow-lg hover:shadow-xl hover:scale-105"
                 >
@@ -139,9 +141,9 @@ export default function Home() {
                   Explore Services
                 </a>
               </div>
-              
+
               <div className="mt-10 flex flex-wrap items-center gap-6">
-                <motion.div 
+                <motion.div
                   whileHover={{ scale: 1.05 }}
                   className="flex items-center gap-1.5 text-blue-100 text-sm cursor-default"
                 >
@@ -153,7 +155,7 @@ export default function Home() {
                   </motion.div>
                   FCA Regulated Partners
                 </motion.div>
-                <motion.div 
+                <motion.div
                   whileHover={{ scale: 1.05 }}
                   className="flex items-center gap-1.5 text-blue-100 text-sm cursor-default"
                 >
@@ -165,7 +167,7 @@ export default function Home() {
                   </motion.div>
                   No Hidden Fees
                 </motion.div>
-                <motion.div 
+                <motion.div
                   whileHover={{ scale: 1.05 }}
                   className="flex items-center gap-1.5 text-blue-100 text-sm cursor-default"
                 >
@@ -263,7 +265,7 @@ export default function Home() {
                 tags: ["Retail & Hospitality", "Multi-Location", "Cloud-Based"]
               }
             ].map((service, i) => (
-              <motion.article 
+              <motion.article
                 key={service.title}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -320,7 +322,7 @@ export default function Home() {
                 features: ["Unified Reporting", "Enterprise SLAs", "Custom Integration"]
               }
             ].map((item, i) => (
-              <motion.div 
+              <motion.div
                 key={i}
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
