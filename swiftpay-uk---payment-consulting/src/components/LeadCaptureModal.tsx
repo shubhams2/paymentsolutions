@@ -92,7 +92,7 @@ export function LeadCaptureModal() {
 
       // 2. Api Backend Lead processing & Notifications
       try {
-        const response = await fetch("/functions/leads", {
+        const response = await fetch("/leads", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -108,7 +108,7 @@ export function LeadCaptureModal() {
           console.warn("Cloudflare Pages Function request failed in LeadCaptureModal:", response.status);
         }
       } catch (fetchErr) {
-        console.warn("Warning: Cloudflare Pages Function '/functions/leads' request failed in LeadCaptureModal:", fetchErr);
+        console.warn("Warning: Cloudflare Pages Function '/leads' request failed in LeadCaptureModal:", fetchErr);
       }
 
       setIsSuccess(true);

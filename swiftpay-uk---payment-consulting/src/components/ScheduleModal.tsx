@@ -106,7 +106,7 @@ export function ScheduleModal({ isOpen, onClose }: ScheduleModalProps) {
       }
 
       try {
-        const response = await fetch("/functions/leads", {
+        const response = await fetch("/leads", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -125,7 +125,7 @@ export function ScheduleModal({ isOpen, onClose }: ScheduleModalProps) {
           setStep("success");
         }
       } catch (fetchErr) {
-        console.warn("Warning: Cloudflare Pages Function '/functions/leads' email trigger failed in ScheduleModal:", fetchErr);
+        console.warn("Warning: Cloudflare Pages Function '/leads' email trigger failed in ScheduleModal:", fetchErr);
         // Continue and succeed since DB write was successful
         setStep("success");
       }

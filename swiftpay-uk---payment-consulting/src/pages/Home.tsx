@@ -77,7 +77,7 @@ export default function Home() {
         createdAt: serverTimestamp(),
       });
 
-      // Step B: Immediately after Firebase write, call local fetch POST to `/functions/leads`
+      // Step B: Immediately after Firebase write, call local fetch POST to `/leads`
       try {
         const response = await fetch("/leads", {
           method: "POST",
@@ -91,7 +91,7 @@ export default function Home() {
           console.warn("Cloudflare Pages Function backup lead request failed with status:", response.status);
         }
       } catch (fetchErr) {
-        console.warn("Warning: Cloudflare Pages Function '/functions/leads' email trigger failed:", fetchErr);
+        console.warn("Warning: Cloudflare Pages Function '/leads' email trigger failed:", fetchErr);
         // Continue allowed by requirement
       }
 
