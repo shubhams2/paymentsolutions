@@ -1,0 +1,379 @@
+var __create = Object.create;
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __getProtoOf = Object.getPrototypeOf;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
+  // If the importer is in node compatibility mode or this is not an ESM
+  // file that has been converted to a CommonJS file using a Babel-
+  // compatible transform (i.e. "__esModule" has not been set), then set
+  // "default" to the CommonJS "module.exports" for node compatibility.
+  isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
+  mod
+));
+
+// server.ts
+var import_express = __toESM(require("express"), 1);
+var import_path = __toESM(require("path"), 1);
+var import_vite = require("vite");
+var import_dotenv = __toESM(require("dotenv"), 1);
+var import_genai = require("@google/genai");
+var import_nodemailer = __toESM(require("nodemailer"), 1);
+var import_firebase_admin = __toESM(require("firebase-admin"), 1);
+var import_firestore = require("firebase-admin/firestore");
+var import_fs = __toESM(require("fs"), 1);
+var import_genai2 = require("@google/genai");
+import_dotenv.default.config();
+var firebaseConfig = null;
+try {
+  const configPath = import_path.default.join(process.cwd(), "firebase-applet-config.json");
+  if (import_fs.default.existsSync(configPath)) {
+    firebaseConfig = JSON.parse(import_fs.default.readFileSync(configPath, "utf8"));
+  }
+} catch (error) {
+  console.error("Failed to load firebase-applet-config.json:", error);
+}
+var projectId = process.env.FIREBASE_PROJECT_ID || firebaseConfig?.projectId;
+var databaseId = firebaseConfig?.firestoreDatabaseId;
+if (projectId) {
+  try {
+    if (import_firebase_admin.default.apps.length === 0) {
+      import_firebase_admin.default.initializeApp({
+        credential: import_firebase_admin.default.credential.applicationDefault(),
+        projectId
+      });
+      console.log(`[Firebase] Admin initialized for project: ${projectId}`);
+    }
+  } catch (error) {
+    console.error(`[Firebase] Admin initialization failed: ${error.message}`);
+  }
+} else {
+  console.warn("[Firebase] Project ID missing from environment and config. Firestore will not work.");
+}
+var db = (function() {
+  if (!projectId) return null;
+  const app = import_firebase_admin.default.apps[0];
+  const dbId = databaseId === "(default)" || !databaseId ? void 0 : databaseId;
+  try {
+    console.log(`[Firebase] Initializing Firestore. Project: ${projectId}, Database: ${dbId || "(default)"}`);
+    return (0, import_firestore.getFirestore)(app, dbId);
+  } catch (e) {
+    console.error(`[Firebase] Fatal Firestore init error: ${e.message}`);
+    return null;
+  }
+})();
+function getFirestoreInstance() {
+  if (!db) {
+    throw new Error("Firestore not initialized.");
+  }
+  return db;
+}
+var transporter = null;
+function getTransporter() {
+  if (!transporter) {
+    const config = {
+      host: process.env.EMAIL_HOST,
+      port: Number(process.env.EMAIL_PORT) || 587,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+      }
+    };
+    if (!config.host || !config.auth.user || !config.auth.pass) {
+      console.warn("Email configuration missing. Emails will be logged to console instead.");
+      return null;
+    }
+    transporter = import_nodemailer.default.createTransport(config);
+  }
+  return transporter;
+}
+async function sendConfirmationEmail(to, name, turnover, phone) {
+  if (to && (to.endsWith("@swiftpayuk-lead.co.uk") || to.includes("@no-email.swiftpayuk-lead.co.uk") || to.endsWith("@phalampayments-lead.co.uk") || to.includes("@no-email.phalampayments-lead.co.uk") || to.includes("no-email"))) {
+    console.log(`Skipping confirmation email to dummy address: ${to}`);
+    return;
+  }
+  const businessName = "Phalam Payments UK";
+  const websiteLink = "https://phalampayments.co.uk";
+  const subject = `${businessName} \u2013 Your Payment Technology Audit Request`;
+  const htmlContent = `
+    <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333; line-height: 1.6;">
+      <p>Hi ${name},</p>
+      <p>Thank you for reaching out to <strong>${businessName}</strong>. We have successfully received your request for a tailored payment technology review.</p>
+      <p>As an independent consulting partner, our goal is simple: to audit your current configuration and connect your business with the most cost-effective, secure, and modern payment infrastructure available on the market.</p>
+      <p>Because we are entirely independent, we don\u2019t force you into a single system. We work directly with leading, FCA-regulated UK and global networks to find the exact configuration that fits your business model.</p>
+
+      <h3 style="color: #1a4aa8; margin-top: 25px;">What happens next?</h3>
+      <ul style="padding-left: 20px;">
+        <li style="margin-bottom: 10px;"><strong>Initial Analysis:</strong> We are currently reviewing your trading profile and estimated monthly card turnover (<strong>${turnover || "Not provided"}</strong>).</li>
+        <li style="margin-bottom: 10px;"><strong>Consultation Call:</strong> A specialist from our team will contact you within 1 business day via <strong>${to}${phone ? " or " + phone : ""}</strong> to discuss your tailored integration options (including POS hardware, Payment Links, or Open Banking solutions).</li>
+      </ul>
+
+      <p>In the meantime, if you have any additional notes or specific hardware requirements you would like to add, simply reply directly to this email.</p>
+      <p>We look forward to optimizing your checkout experience.</p>
+
+      <p style="margin-top: 30px; margin-bottom: 20px; font-size: 14px; color: #333;">Kind regards,</p>
+
+      <p style="margin: 0; font-size: 15px; color: #333;"><strong>Shubham Garg</strong></p>
+      <p style="margin: 0 0 15px 0; font-size: 13px; color: #666;">Managing Consultant | Phalam Payments</p>
+
+      <p style="margin: 0; font-size: 13px; color: #555; line-height: 1.5;">
+        <strong>M:</strong> +44 7448 558053<br>
+        <strong>E:</strong> <a href="mailto:sales@phalampayments.co.uk" style="color: #1a4aa8; text-decoration: none;">sales@phalampayments.co.uk</a><br>
+        <strong>W:</strong> <a href="https://phalampayments.co.uk" style="color: #1a4aa8; text-decoration: none;">https://phalampayments.co.uk</a>
+      </p>
+
+      <p style="margin: 20px 0; font-size: 11px; color: #999; font-family: monospace;">
+        ----------------------------------------------------------------------<br>
+        Independent Payment Technology Consultants & Systems Integrators<br>
+        ----------------------------------------------------------------------
+      </p>
+
+      <p style="font-size: 11px; color: #888; border-left: 3px solid #eee; padding-left: 10px; font-style: italic; line-height: 1.4;">
+        <strong>Legal Disclaimer:</strong> Phalam Payments is an independent technology consultancy. We are not a bank or an FCA-regulated financial institution. All merchant accounts, card processing services, and financial transactions are provided exclusively by our fully authorized and regulated partner networks.
+      </p>
+    </div>
+  `;
+  const mailOptions = {
+    from: process.env.EMAIL_FROM || `${businessName} <sales@phalampayments.co.uk>`,
+    to,
+    subject,
+    html: htmlContent
+  };
+  const client = getTransporter();
+  if (client) {
+    try {
+      await client.sendMail(mailOptions);
+      console.log(`Confirmation email sent to ${to}`);
+    } catch (e) {
+      console.error("Error sending confirmation email:", e);
+    }
+  } else {
+    console.log("--- MOCK EMAIL ---");
+    console.log(`To: ${to}`);
+    console.log(`Subject: ${subject}`);
+    console.log("------------------");
+  }
+}
+async function sendAdminNotification(leadData) {
+  const mailOptions = {
+    from: process.env.EMAIL_FROM || "Phalam Payments UK <sales@phalampayments.co.uk>",
+    to: process.env.ADMIN_EMAIL || process.env.EMAIL_FROM || "admin@phalampayments.co.uk",
+    subject: "NEW LEAD: ChatBot enquiry received",
+    html: `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #0d2f6e;">
+        <h2 style="color: #1a4aa8;">New ChatBot Lead</h2>
+        <p>A new enquiry has been captured via the AI assistant:</p>
+        <div style="background: #f9f9f9; padding: 15px; border-radius: 8px; border: 1px solid #eee;">
+          <p><strong>Name:</strong> ${leadData.name}</p>
+          <p><strong>Email:</strong> ${leadData.email}</p>
+          <p><strong>Phone:</strong> ${leadData.phone || "Not provided"}</p>
+          <p><strong>Business:</strong> ${leadData.businessName || "Not provided"}</p>
+          <p><strong>Source:</strong> ChatBot Assistant</p>
+        </div>
+        <p>Please follow up with the lead as soon as possible.</p>
+      </div>
+    `
+  };
+  const client = getTransporter();
+  if (client) {
+    try {
+      await client.sendMail(mailOptions);
+    } catch (e) {
+      console.error("Error sending admin notification mail (chatbot):", e);
+    }
+  } else {
+    console.log("--- MOCK ADMIN NOTIFICATION ---");
+    console.log(`To: ${mailOptions.to}`);
+    console.log(`Subject: ${mailOptions.subject}`);
+    console.log(`Lead: ${leadData.name} (${leadData.email})`);
+    console.log("------------------------------");
+  }
+}
+var ai = new import_genai.GoogleGenAI({
+  apiKey: process.env.GEMINI_API_KEY || "",
+  httpOptions: {
+    headers: {
+      "User-Agent": "aistudio-build"
+    }
+  }
+});
+var submitLeadTool = {
+  name: "submitLead",
+  description: "Registers a user's contact information for a follow-up consultation or payment audit.",
+  parameters: {
+    type: import_genai2.Type.OBJECT,
+    properties: {
+      name: { type: import_genai2.Type.STRING, description: "The full name of the contact person" },
+      email: { type: import_genai2.Type.STRING, description: "The email address for contact" },
+      phone: { type: import_genai2.Type.STRING, description: "The phone number (optional)" },
+      businessName: { type: import_genai2.Type.STRING, description: "The name of the business (optional)" },
+      monthlyTurnover: { type: import_genai2.Type.STRING, description: "The estimated monthly card turnover (optional)" }
+    },
+    required: ["name", "email"]
+  }
+};
+async function startServer() {
+  const app = (0, import_express.default)();
+  const PORT = 3e3;
+  app.use(import_express.default.json());
+  app.post("/api/leads", async (req, res) => {
+    try {
+      const {
+        name,
+        email,
+        phone,
+        businessName,
+        businessSize,
+        monthlyTurnover,
+        solutionInterest,
+        howHeard,
+        message,
+        marketingConsent,
+        appointmentDate,
+        appointmentTime,
+        skipDbSave,
+        source = "web_form"
+      } = req.body;
+      if (!name) {
+        return res.status(400).json({ error: "Missing name" });
+      }
+      const effectiveEmail = email || `phone-lead-${phone?.replace(/[^0-9]/g, "") || Date.now()}@phalampayments-lead.co.uk`;
+      console.log("Lead received:", { name, email: effectiveEmail, source });
+      sendConfirmationEmail(effectiveEmail, name, monthlyTurnover, phone).catch(console.error);
+      const adminOptions = {
+        from: process.env.EMAIL_FROM || "Phalam Payments UK <sales@phalampayments.co.uk>",
+        to: process.env.ADMIN_EMAIL || process.env.EMAIL_FROM || "admin@phalampayments.co.uk",
+        subject: appointmentDate ? `NEW BOOKING: ${name} scheduled a consultation` : `NEW LEAD: Enquiry from ${name}`,
+        html: `
+          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #0d2f6e;">
+            <h2 style="color: #1a4aa8;">${appointmentDate ? "New Consultation Booking" : "New Website Enquiry"}</h2>
+            <div style="background: #f9f9f9; padding: 15px; border-radius: 8px; border: 1px solid #eee;">
+              <p><strong>Name:</strong> ${name}</p>
+              <p><strong>Email:</strong> ${effectiveEmail}</p>
+              <p><strong>Phone:</strong> ${phone || "Not provided"}</p>
+              <p><strong>Business:</strong> ${businessName || "Not provided"}</p>
+              <p><strong>Monthly Turnover:</strong> ${monthlyTurnover || "Not provided"}</p>
+              ${appointmentDate ? `<p><strong>Appointment:</strong> ${appointmentDate} at ${appointmentTime}</p>` : ""}
+              ${solutionInterest ? `<p><strong>Interest:</strong> ${solutionInterest}</p>` : ""}
+              ${message ? `<p><strong>Message:</strong> ${message}</p>` : ""}
+              <p><strong>Marketing Consent:</strong> ${marketingConsent ? "YES" : "NO"}</p>
+              <p><strong>Source:</strong> ${source}</p>
+            </div>
+            <p>Please follow up with the lead as soon as possible via CRM or Email.</p>
+          </div>
+        `
+      };
+      const client = getTransporter();
+      if (client) {
+        try {
+          await client.sendMail(adminOptions);
+        } catch (mailError) {
+          console.error("Error sending admin notification mail:", mailError);
+        }
+      } else {
+        console.log("--- MOCK ADMIN NOTIFICATION ---");
+        console.log(`To: ${adminOptions.to}`);
+        console.log(`Subject: ${adminOptions.subject}`);
+        console.log("------------------------------");
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Lead submission error:", error);
+      res.status(500).json({ error: "Failed to process lead submission", details: error.message, stack: error.stack });
+    }
+  });
+  app.post("/api/chat", async (req, res) => {
+    try {
+      const { message, history } = req.body;
+      const chat = ai.chats.create({
+        model: "gemini-3-flash-preview",
+        config: {
+          systemInstruction: "You are a customer support agent for Phalam Payments UK. You are helpful, professional, and knowledgeable about payment solutions. Phalam Payments is an independent consultancy helping UK businesses find the best card readers, POS, and QR code payments. \n\nIMPORTANT: If a user expresses interest in a consultation, audit, or want to speak with an expert, you should proactively ask for their Name, Email, and optionally Phone, Business Name, and Estimated Monthly Card Turnover. Once you have at least Name and Email, use the 'submitLead' tool to register their interest. After calling the tool, confirm to the user that their details have been received and a specialist will contact them within 24 hours.",
+          tools: [{ functionDeclarations: [submitLeadTool] }]
+        },
+        history: history || []
+      });
+      const response = await chat.sendMessage({ message });
+      if (response.functionCalls) {
+        for (const call of response.functionCalls) {
+          if (call.name === "submitLead") {
+            const leadData = call.args;
+            console.log("ChatBot captured lead:", leadData);
+            if (projectId) {
+              try {
+                const dbInstance = getFirestoreInstance();
+                await dbInstance.collection("leads").add({
+                  ...leadData,
+                  source: "chatbot",
+                  createdAt: import_firebase_admin.default.firestore.FieldValue.serverTimestamp()
+                });
+                console.log("Chat lead saved to Firestore");
+              } catch (dbError) {
+                console.error("Chat lead save FAILED:", dbError.message);
+                const toolResponse2 = await chat.sendMessage({
+                  message: {
+                    role: "user",
+                    parts: [{
+                      functionResponse: {
+                        name: "submitLead",
+                        response: { status: "error", message: `Database error: ${dbError.message}. We will still attempt to contact you via email.` }
+                      }
+                    }]
+                  }
+                });
+                return res.json({ text: toolResponse2.text });
+              }
+            } else {
+              console.log("MOCK DB SAVE: ", leadData);
+            }
+            sendConfirmationEmail(leadData.email, leadData.name, leadData.monthlyTurnover, leadData.phone).catch(console.error);
+            sendAdminNotification(leadData).catch(console.error);
+            const toolResponse = await chat.sendMessage({
+              message: {
+                role: "user",
+                parts: [{
+                  functionResponse: {
+                    name: "submitLead",
+                    response: { status: "success", message: "Lead successfully recorded. An expert will reach out within 24 hours." }
+                  }
+                }]
+              }
+            });
+            return res.json({ text: toolResponse.text });
+          }
+        }
+      }
+      res.json({ text: response.text });
+    } catch (error) {
+      console.error("Chat Error:", error);
+      res.status(500).json({ error: "Failed to process chat message" });
+    }
+  });
+  if (process.env.NODE_ENV !== "production") {
+    const vite = await (0, import_vite.createServer)({
+      server: { middlewareMode: true },
+      appType: "spa"
+    });
+    app.use(vite.middlewares);
+  } else {
+    const distPath = import_path.default.join(process.cwd(), "dist");
+    app.use(import_express.default.static(distPath));
+    app.get("*", (req, res) => {
+      res.sendFile(import_path.default.join(distPath, "index.html"));
+    });
+  }
+  app.listen(PORT, "0.0.0.0", () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+  });
+}
+startServer();
+//# sourceMappingURL=server.cjs.map
