@@ -4,7 +4,9 @@
  *
  * This handler accepts a POST request, retrieves the Zoho App Password from
  * Environment Variables, dynamically obtains the account ID from Zoho's accounts
- * endpoint, and pushes a branded HTML email confirmation directly using Zoho's official REST API.
+ * endpoint (extracting accountId from response.data[0].accountId), and pushes
+ * a branded HTML email confirmation directly using Zoho's official REST API.
+ * Included additional header: X-COM-ZOHO-MAIL-OWNER set to sales@phalampayments.co.uk
  */
 
 interface Env {
@@ -16,14 +18,27 @@ interface RequestContext {
   env: Env;
 }
 
-export async function onRequestPost({ request, env }: RequestContext): Promise<Response> {
-  const corsHeaders = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization",
-  };
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization, X-COM-ZOHO-MAIL-OWNER",
+};
 
-  // Handle preflight OPTIONS requests from client browsers
+/**
+ * Handle OPTIONS preflight requests cleanly on Cloudflare Pages
+ */
+export async function onRequestOptions(): Promise<Response> {
+  return new Response(null, {
+    status: 204,
+    headers: corsHeaders,
+  });
+}
+
+/**
+ * Handle POST request for submission of client leads
+ */
+export async function onRequestPost({ request, env }: RequestContext): Promise<Response> {
+  // Handle OPTIONS preflight within POST handler as well
   if (request.method === "OPTIONS") {
     return new Response(null, {
       status: 204,
@@ -32,7 +47,7 @@ export async function onRequestPost({ request, env }: RequestContext): Promise<R
   }
 
   try {
-    // 1. Parse JSON Request Inputs
+    // 1. Parse incoming JSON request data
     const { name, email, phone, source } = (await request.json()) as {
       name: string;
       email: string;
@@ -43,54 +58,94 @@ export async function onRequestPost({ request, env }: RequestContext): Promise<R
     // Validate inputs
     if (!name || !email || !phone) {
       return new Response(
-        JSON.stringify({ error: "Missing required fields: name, email, and phone are mandatory." }),
+        JSON.stringify({
+          success: false,
+          error: "Missing required fields. Please ensure 'name', 'email', and 'phone' are provided.",
+        }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // 2. Fetch Zoho App Password from Cloudflare Environment Variables
+    // 2. Retrieve the ZOHO_APP_PASSWORD environment variable
     const zohoAppPassword = env.ZOHO_APP_PASSWORD;
     if (!zohoAppPassword) {
       console.error("Cloudflare Error: ZOHO_APP_PASSWORD environment variable is not defined.");
       return new Response(
-        JSON.stringify({ error: "Server Configuration Error: App password is missing on Cloudflare." }),
+        JSON.stringify({
+          success: false,
+          error: "Cloudflare Environment Configuration Error: ZOHO_APP_PASSWORD is not set on the dashboard.",
+        }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
+    // Prepare authorization and owner headers required by Zoho Mail API
     const authHeader = `Zoho-encauthtoken ${zohoAppPassword}`;
+    const ownerHeader = "sales@phalampayments.co.uk";
 
-    // 3. Step A: Contact Zoho API to dynamically retrieve the accountId
-    // Standard user requested GET 'https://zoho.com' with Authorization
-    console.log("Connecting to Zoho REST Accounts endpoint to fetch accountId dynamically...");
+    const commonHeaders = {
+      "Authorization": authHeader,
+      "X-COM-ZOHO-MAIL-OWNER": ownerHeader,
+      "Accept": "application/json",
+    };
+
+    // 3. Step One: Contact Zoho accounts API to retrieve account details
+    console.log("Contacting Zoho REST accounts endpoint to retrieve account ID...");
     const accountsResponse = await fetch("https://zoho.com", {
       method: "GET",
-      headers: {
-        "Authorization": authHeader,
-        "Accept": "application/json",
-      },
+      headers: commonHeaders,
     });
 
     if (!accountsResponse.ok) {
-      console.warn(`Zoho accounts request returned status: ${accountsResponse.status}. Attempting backup parse.`);
+      const errorText = await accountsResponse.text();
+      console.error(`Zoho GET accounts endpoint failed with status ${accountsResponse.status}: ${errorText}`);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: `Zoho account validation failed. (Status: ${accountsResponse.status}). Details: ${errorText}`,
+        }),
+        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
-    // Process accounts response
-    let accountId = "default_accountId";
+    // 4. Safely extract accountId from the first element of 'data' array
+    let accountId: string | null = null;
     try {
       const accountsData = (await accountsResponse.json()) as any;
-      // Capture from custom key, nested data array, or fallback explicitly
-      accountId =
-        accountsData?.accountId ||
-        accountsData?.data?.[0]?.accountId ||
-        accountsData?.accounts?.[0]?.accountId ||
-        "123456789"; // Fallback placeholder if parse fails in testing
-      console.log(`Successfully resolved Zoho Account ID: ${accountId}`);
-    } catch (parseError) {
-      console.warn("Could not read dynamic accountId from Zoho accounts body. Defaulting to standard account.", parseError);
+      console.log("Fetched Zoho account representation structure successfully.");
+
+      if (accountsData && Array.isArray(accountsData.data) && accountsData.data.length > 0) {
+        accountId = accountsData.data[0].accountId;
+      } else if (accountsData && accountsData.accountId) {
+        accountId = accountsData.accountId; // Direct fallback
+      } else if (accountsData && Array.isArray(accountsData.accounts) && accountsData.accounts.length > 0) {
+        accountId = accountsData.accounts[0].accountId; // Sub-accounts fallback
+      }
+    } catch (parseErr: any) {
+      console.error("Failed to parse accounts JSON response from Zoho:", parseErr);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: `Failed to parse account representation from Zoho: ${parseErr.message}`,
+        }),
+        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
-    // 4. Step B: Build HTML Confirmation Mail containing Shubham's Signature
+    if (!accountId) {
+      console.error("No valid accountId identified in Zoho Response.");
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "Zoho accounts endpoint did not contain any valid accounts under data[0].accountId",
+        }),
+        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    console.log(`Identified Zoho Account ID: ${accountId}`);
+
+    // 5. Build transaction HTML email with legal signature
     const emailHtmlContent = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333; line-height: 1.6;">
         <div style="background-color: #0d2f6e; padding: 25px; text-align: center; border-radius: 8px 8px 0 0;">
@@ -132,9 +187,9 @@ export async function onRequestPost({ request, env }: RequestContext): Promise<R
       </div>
     `;
 
-    // 5. Step C: Dispatch POST to Zoho Message Sender API
+    // 6. Step Two: Dispatch POST message trigger using correct accountId
     const zohoMessageUrl = `https://zoho.com/${accountId}/messages`;
-    console.log(`Sending POST request to Zoho Mail API: ${zohoMessageUrl}`);
+    console.log(`Dispatching outbound email trigger via Zoho Mail URL: ${zohoMessageUrl}`);
 
     const mailBody = {
       fromAddress: "sales@phalampayments.co.uk",
@@ -147,36 +202,41 @@ export async function onRequestPost({ request, env }: RequestContext): Promise<R
     const mailResponse = await fetch(zohoMessageUrl, {
       method: "POST",
       headers: {
-        "Authorization": authHeader,
+        ...commonHeaders,
         "Content-Type": "application/json",
-        "Accept": "application/json",
       },
       body: JSON.stringify(mailBody),
     });
 
     if (!mailResponse.ok) {
       const errorText = await mailResponse.text();
-      console.error(`Zoho Mail dispatch failure: ${mailResponse.status} - ${errorText}`);
-      throw new Error(`Zoho API rejected email dispatch with code ${mailResponse.status}: ${errorText}`);
+      console.error(`Zoho Mail endpoint rejected request with status ${mailResponse.status}: ${errorText}`);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: `Zoho Mail API rejected dispatch. (Status: ${mailResponse.status}). Details: ${errorText}`,
+        }),
+        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     const mailResponseData = (await mailResponse.json()) as any;
-    console.log("Email dispatch successfully executed via Zoho Mail API.");
+    console.log("Outbound HTML email dispatch successfully executed.");
 
     return new Response(
       JSON.stringify({
         success: true,
-        message: "Lead processed successfully, confirmation email sent via Zoho REST API.",
-        zohoId: mailResponseData?.messageId || "dispatched",
+        message: "Confirmation email sent successfully via Zoho Mail API.",
+        messageId: mailResponseData?.messageId || "dispatched",
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
-  } catch (error: any) {
-    console.error("Cloudflare Functions Lead error catcher:", error);
+  } catch (err: any) {
+    console.error("Cloudflare Pages Function Exception:", err);
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message || "An error occurred while processing lead.",
+        error: `Cloudflare Pages Serverless Exception: ${err.message || err}`,
       }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
