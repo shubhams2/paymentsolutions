@@ -44,12 +44,51 @@ export const SEO_DATA = {
         "jobTitle": "Managing Consultant"
       },
       "knowsAbout": [
-        "Payment systems integration",
-        "Merchant account audits",
-        "Card payment terminals",
-        "POS systems",
-        "Payment gateways",
-        "Transaction fee optimization"
+        {
+          "@type": "Thing",
+          "name": "Payment Gateway",
+          "sameAs": [
+            "https://en.wikipedia.org/wiki/Payment_gateway",
+            "https://www.wikidata.org/wiki/Q2065313"
+          ]
+        },
+        {
+          "@type": "Thing",
+          "name": "Payment Terminal (PDQ and Card Machines)",
+          "sameAs": [
+            "https://en.wikipedia.org/wiki/Payment_terminal",
+            "https://www.wikidata.org/wiki/Q1056525"
+          ]
+        },
+        {
+          "@type": "Thing",
+          "name": "Merchant Services",
+          "sameAs": [
+            "https://en.wikipedia.org/wiki/Merchant_services",
+            "https://www.wikidata.org/wiki/Q6818779"
+          ]
+        },
+        {
+          "@type": "Thing",
+          "name": "Point of Sale Systems (POS)",
+          "sameAs": [
+            "https://en.wikipedia.org/wiki/Point_of_sale",
+            "https://www.wikidata.org/wiki/Q796245"
+          ]
+        },
+        {
+          "@type": "Thing",
+          "name": "PCI DSS Compliance Standards",
+          "sameAs": [
+            "https://en.wikipedia.org/wiki/Payment_Card_Industry_Data_Security_Standard",
+            "https://www.wikidata.org/wiki/Q1053424"
+          ]
+        },
+        {
+          "@type": "Thing",
+          "name": "Transaction Fee Optimization and Merchant Audits",
+          "sameAs": "https://en.wikipedia.org/wiki/Merchant_account"
+        }
       ],
       "sameAs": [
         "https://phalampayments.co.uk"
@@ -74,7 +113,7 @@ export const SEO_DATA = {
         "@type": "Country",
         "name": "United Kingdom"
       },
-      "description": "Specialist advisory for physical brick-and-mortar independent businesses in the UK. We inspect billing fees, review existing provider contracts, and coordinate secure setup of Chip & PIN card terminals and mobile retail POS hardware.",
+      "description": "Independent UK payment consulting for retail shops and large e-commerce sites. We review contracts, lower card machine fees, and optimize online gateways.",
       "category": "Business Consulting",
       "offers": {
         "@type": "Offer",
