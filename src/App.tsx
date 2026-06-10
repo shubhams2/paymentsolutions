@@ -10,6 +10,8 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfUse from "./pages/TermsOfUse";
 import CookiePolicy from "./pages/CookiePolicy";
 import AdminLeads from "./pages/AdminLeads";
+import RetailConsulting from "./pages/RetailConsulting";
+import EcommerceConsulting from "./pages/EcommerceConsulting";
 import { useEffect } from "react";
 
 function ScrollToTop() {
@@ -33,6 +35,8 @@ export default function App() {
         <main className="flex-grow">
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/retail-consulting" element={<RetailConsulting />} />
+            <Route path="/ecommerce-consulting" element={<EcommerceConsulting />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/terms-of-use" element={<TermsOfUse />} />
             <Route path="/cookie-policy" element={<CookiePolicy />} />

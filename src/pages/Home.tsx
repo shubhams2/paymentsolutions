@@ -32,6 +32,8 @@ import { ScheduleModal } from "../components/ScheduleModal";
 
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../lib/firebase";
+import { SEO } from "../components/SEO";
+import { SEO_DATA } from "../lib/seoData";
 
 const leadSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -108,6 +110,11 @@ export default function Home() {
 
   return (
     <div>
+      <SEO
+        title={SEO_DATA.homepage.title}
+        description={SEO_DATA.homepage.description}
+        schema={SEO_DATA.homepage.schema}
+      />
       {/* Hero Section */}
       <section id="hero" className="relative min-h-screen flex items-center overflow-hidden pt-16" style={{ background: "linear-gradient(135deg, #0d2f6e 0%, #1a4aa8 60%, #0d2f6e 100%)" }}>
         <div className="absolute -top-32 -right-32 w-[500px] h-[500px] rounded-full opacity-10" style={{ background: "radial-gradient(circle, #e8a800, transparent 70%)" }}></div>

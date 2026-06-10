@@ -1,0 +1,16 @@
+# Custom robots.txt for Phalam Payments SEO & AEO Optimization
+
+User-agent: *
+Allow: /
+
+# Specifically request AI crawlers to discover our structured schema-rich layout
+User-agent: GPTBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+Sitemap: https://phalampayments.co.uk/sitemap.xml

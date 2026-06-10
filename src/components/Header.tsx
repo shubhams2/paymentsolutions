@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
@@ -8,10 +7,10 @@ import { onAuthStateChanged, User } from "firebase/auth";
 import { auth } from "../lib/firebase";
 
 const navLinks = [
-  { name: "Services", href: "/#services" },
+  { name: "Retail Solutions", href: "/retail-consulting" },
+  { name: "E-Commerce Gateway", href: "/ecommerce-consulting" },
   { name: "Why Us", href: "/#why-us" },
   { name: "How It Works", href: "/#how-it-works" },
-  { name: "Testimonials", href: "/#testimonials" },
   { name: "Contact", href: "/#contact" },
 ];
 
@@ -39,9 +38,14 @@ export function Header() {
 
   const handleLinkClick = (href: string) => {
     setIsMenuOpen(false);
-    if (href.startsWith("/#") && location.pathname === "/") {
+    if (href.startsWith("/#")) {
       const id = href.split("#")[1];
-      document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+      if (location.pathname === "/") {
+        document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+      } else {
+        // Redirect to homepage anchor
+        window.location.href = href;
+      }
     }
   };
 
@@ -63,21 +67,37 @@ export function Header() {
           </Link>
 
           <nav className="hidden md:flex items-center gap-6">
-            {navLinks.map((link) => (
-              <a
-                key={link.name}
-                href={link.href}
-                className="text-sm font-medium text-gray-600 hover:text-navy transition-colors"
-                onClick={(e) => {
-                   if (link.href.startsWith("/#") && location.pathname === "/") {
-                     e.preventDefault();
-                     handleLinkClick(link.href);
-                   }
-                }}
-              >
-                {link.name}
-              </a>
-            ))}
+            {navLinks.map((link) => {
+              const isAnchor = link.href.startsWith("/#");
+
+              if (!isAnchor) {
+                return (
+                  <Link
+                    key={link.name}
+                    to={link.href}
+                    className="text-sm font-medium text-gray-600 hover:text-navy transition-colors"
+                  >
+                    {link.name}
+                  </Link>
+                );
+              }
+
+              return (
+                <a
+                  key={link.name}
+                  href={link.href}
+                  className="text-sm font-medium text-gray-600 hover:text-navy transition-colors"
+                  onClick={(e) => {
+                    if (location.pathname === "/") {
+                      e.preventDefault();
+                      handleLinkClick(link.href);
+                    }
+                  }}
+                >
+                  {link.name}
+                </a>
+              );
+            })}
             <Link
               to="/#contact"
               className="ml-2 inline-flex items-center px-5 py-2 text-sm font-semibold text-white rounded-lg bg-navy hover:brightness-110 transition-all"
@@ -111,21 +131,38 @@ export function Header() {
             className="fixed inset-0 z-40 md:hidden bg-white pt-24 px-4 overflow-y-auto"
           >
             <div className="space-y-4">
-              {navLinks.map((link) => (
-                <a
-                  key={link.name}
-                  href={link.href}
-                  onClick={(e) => {
-                    if (link.href.startsWith("/#") && location.pathname === "/") {
-                      e.preventDefault();
-                    }
-                    handleLinkClick(link.href);
-                  }}
-                  className="block text-2xl font-bold text-navy py-4 border-b border-gray-100"
-                >
-                  {link.name}
-                </a>
-              ))}
+              {navLinks.map((link) => {
+                const isAnchor = link.href.startsWith("/#");
+
+                if (!isAnchor) {
+                  return (
+                    <Link
+                      key={link.name}
+                      to={link.href}
+                      onClick={() => setIsMenuOpen(false)}
+                      className="block text-2xl font-bold text-navy py-4 border-b border-gray-100"
+                    >
+                      {link.name}
+                    </Link>
+                  );
+                }
+
+                return (
+                  <a
+                    key={link.name}
+                    href={link.href}
+                    onClick={(e) => {
+                      if (location.pathname === "/") {
+                        e.preventDefault();
+                      }
+                      handleLinkClick(link.href);
+                    }}
+                    className="block text-2xl font-bold text-navy py-4 border-b border-gray-100"
+                  >
+                    {link.name}
+                  </a>
+                );
+              })}
               <Link
                 to="/#contact"
                 onClick={(e) => {

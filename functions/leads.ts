@@ -91,7 +91,7 @@ export async function onRequestPost({ request, env }: RequestContext): Promise<R
 
     // 3. Step One: Contact Zoho accounts API to retrieve account details
     console.log("Contacting Zoho REST accounts endpoint to retrieve account ID...");
-    const accountsResponse = await fetch("https://zoho.com", {
+    const accountsResponse = await fetch("https://mail.zoho.com/api/accounts", {
       method: "GET",
       headers: commonHeaders,
     });
@@ -188,7 +188,7 @@ export async function onRequestPost({ request, env }: RequestContext): Promise<R
     `;
 
     // 6. Step Two: Dispatch POST message trigger using correct accountId
-    const zohoMessageUrl = `https://zoho.com/${accountId}/messages`;
+    const zohoMessageUrl = `https://mail.zoho.com/${accountId}/messages`;
     console.log(`Dispatching outbound email trigger via Zoho Mail URL: ${zohoMessageUrl}`);
 
     const mailBody = {
