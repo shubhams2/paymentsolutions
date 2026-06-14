@@ -313,9 +313,9 @@ async function startServer() {
       const { message, history } = req.body;
 
       const chat = ai.chats.create({
-        model: "gemini-3-flash-preview",
+        model: "gemini-3.5-flash",
         config: {
-          systemInstruction: "You are a customer support agent for Phalam Payments UK. You are helpful, professional, and knowledgeable about payment solutions. Phalam Payments is an independent consultancy helping UK businesses find the best card readers, POS, and QR code payments. \n\nIMPORTANT: If a user expresses interest in a consultation, audit, or want to speak with an expert, you should proactively ask for their Name, Email, and optionally Phone, Business Name, and Estimated Monthly Card Turnover. Once you have at least Name and Email, use the 'submitLead' tool to register their interest. After calling the tool, confirm to the user that their details have been received and a specialist will contact them within 24 hours.",
+          systemInstruction: "You are a customer support agent for Phalam Payments UK. You are helpful, professional, and knowledgeable about payment solutions. Phalam Payments is an independent consultancy helping UK businesses find the best card readers, POS, and QR code payments. \n\nIMPORTANT: If a user expresses interest in a consultation, audit, or want to speak with an expert, you should proactively ask for their Name, Email, and optionally Phone, Business Name, and Estimated Monthly Card Turnover. Once you have at least Name and Email, use the 'submitLead' tool to register their interest. After calling the tool, confirm to the user that their details have been received and a specialist will contact them within 24 hours.\n\nFORMATTING REQUIREMENTS:\n- Do not output a continuous wall of text.\n- Structure your responses with separate, short paragraphs.\n- Always put listed items, options, or sequential steps on separate, new lines.\n- Use Markdown bolding (`**`) or numbers/bullet points clearly to guide the reader.",
           tools: [{ functionDeclarations: [submitLeadTool] }]
         },
         history: history || [],
@@ -343,16 +343,13 @@ async function startServer() {
               } catch (dbError: any) {
                 console.error("Chat lead save FAILED:", dbError.message);
                 const toolResponse = await chat.sendMessage({
-                  message: {
-                    role: "user",
-                    parts: [{
-                      functionResponse: {
-                        name: "submitLead",
-                        response: { status: "error", message: `Database error: ${dbError.message}. We will still attempt to contact you via email.` }
-                      }
-                    }]
-                  }
-                } as any);
+                  message: [{
+                    functionResponse: {
+                      name: "submitLead",
+                      response: { status: "error", message: `Database error: ${dbError.message}. We will still attempt to contact you via email.` }
+                    }
+                  }]
+                });
                 return res.json({ text: toolResponse.text });
               }
             } else {
@@ -365,16 +362,13 @@ async function startServer() {
 
             // Respond to the tool
             const toolResponse = await chat.sendMessage({
-              message: {
-                role: "user",
-                parts: [{
-                  functionResponse: {
-                    name: "submitLead",
-                    response: { status: "success", message: "Lead successfully recorded. An expert will reach out within 24 hours." }
-                  }
-                }]
-              }
-            } as any); // Use any because of slightly different type in sendMessage vs generateContent
+              message: [{
+                functionResponse: {
+                  name: "submitLead",
+                  response: { status: "success", message: "Lead successfully recorded. An expert will reach out within 24 hours." }
+                }
+              }]
+            });
 
             return res.json({ text: toolResponse.text });
           }

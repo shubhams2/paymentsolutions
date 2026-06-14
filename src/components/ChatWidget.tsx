@@ -38,8 +38,9 @@ export function ChatWidget() {
     setIsLoading(true);
 
     try {
-      // Filter history to exclude the last message which is what we just added
-      const history = messages.map(m => ({ role: m.role, parts: m.parts }));
+      // Filter history to exclude the last message which is what we just added,
+      // and exclude the first greeting message (which is from the model) because Gemini chat history must start with a user message.
+      const history = messages.slice(1).map(m => ({ role: m.role, parts: m.parts }));
 
       const response = await fetch("/api/chat", {
         method: "POST",
@@ -108,7 +109,7 @@ export function ChatWidget() {
                 >
                   <div
                     className={cn(
-                      "p-3 rounded-2xl text-sm leading-relaxed shadow-sm",
+                      "p-3 rounded-2xl text-sm leading-relaxed shadow-sm whitespace-pre-wrap",
                       msg.role === "user"
                         ? "bg-navy text-white rounded-tr-none"
                         : "bg-white text-gray-700 border border-gray-100 rounded-tl-none"

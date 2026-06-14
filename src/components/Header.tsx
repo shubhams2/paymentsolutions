@@ -9,6 +9,7 @@ import { auth } from "../lib/firebase";
 const navLinks = [
   { name: "Retail Solutions", href: "/retail-consulting" },
   { name: "E-Commerce Gateway", href: "/ecommerce-consulting" },
+  { name: "Knowledge Hub", href: "/blog" },
   { name: "Why Us", href: "/#why-us" },
   { name: "How It Works", href: "/#how-it-works" },
   { name: "Contact", href: "/#contact" },
@@ -57,9 +58,7 @@ export function Header() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-12">
           <Link to="/" className="flex items-center gap-2 group">
-            <div className="w-9 h-9 bg-navy rounded-lg flex items-center justify-center">
-              <CreditCard className="w-5 h-5 text-white" />
-            </div>
+            <img src="/logo.svg" alt="Phalam Payments UK Logo" className="w-10 h-10 object-contain group-hover:scale-105 transition-transform" />
             <div className="leading-tight">
               <span className="font-display font-bold text-lg text-navy">Phalam Payments</span>
               <span className="font-inter font-semibold text-lg text-gold ml-0.5"> UK</span>

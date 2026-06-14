@@ -18,5 +18,11 @@ service cloud.firestore {
     match /leads/{leadId} {
       allow read, write: if true;
     }
+
+    // 4. Blog Posts Rules
+    match /blogs/{blogId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
   }
 }

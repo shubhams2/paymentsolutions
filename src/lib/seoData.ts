@@ -176,5 +176,22 @@ export const SEO_DATA = {
         "name": "High-Volume E-Commerce Sites, Digital Platforms & Enterprise Networks"
       }
     }
+  },
+
+  blog: {
+    title: "Expert Payment Industry Insights & Guides | Phalam Payments UK",
+    description: "Read expert merchant research, technical guides, contract audits, and point-of-sale comparisons from independent payment consultants at Phalam Payments.",
+    schema: {
+      "@context": "https://schema.org",
+      "@type": "Blog",
+      "name": "Phalam Payments Knowledge Hub",
+      "description": "Expert advice, guides, regulatory news, and tech reviews in the merchant services and payment space.",
+      "publisher": {
+        "@type": "ProfessionalService",
+        "name": "Phalam Payments",
+        "url": "https://phalampayments.co.uk"
+      },
+      "inLanguage": "en-GB"
+    }
   }
 } as const;

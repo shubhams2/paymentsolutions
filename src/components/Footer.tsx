@@ -8,9 +8,7 @@ export function Footer() {
     <footer className="py-10 border-t border-gray-100 bg-white">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6 text-sm text-gray-400">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-md bg-navy flex items-center justify-center">
-            <CreditCard className="w-4 h-4 text-white" />
-          </div>
+          <img src="/logo.svg" alt="Phalam Payments UK Logo" className="w-8 h-8 object-contain" />
           <span className="font-semibold text-gray-600">Phalam Payments UK</span>
           <span className="ml-2 whitespace-nowrap">© {new Date().getFullYear()}. All rights reserved.</span>
         </div>

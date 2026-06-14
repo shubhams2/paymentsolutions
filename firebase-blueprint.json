@@ -21,12 +21,33 @@
         "createdAt": { "type": "string", "description": "Timestamp when the lead was generated" }
       },
       "required": ["name", "email", "phone"]
+    },
+    "Blog": {
+      "title": "Blog",
+      "description": "A professional payments blog post or guide.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "description": "The title of the blog post" },
+        "slug": { "type": "string", "description": "URL-friendly path-segment slug" },
+        "content": { "type": "string", "description": "Full HTML or Markdown text body of the post" },
+        "summary": { "type": "string", "description": "Short introductory excerpt" },
+        "category": { "type": "string", "description": "Category for classification e.g. Card Machines, Gateways, Audits" },
+        "readTime": { "type": "string", "description": "Estimated reading duration e.g. '4 min read'" },
+        "image": { "type": "string", "description": "Cover illustration or photo path" },
+        "author": { "type": "string", "description": "Written by author name" },
+        "createdAt": { "type": "string", "description": "The publication date and timestamp" }
+      },
+      "required": ["title", "slug", "content", "summary"]
     }
   },
   "firestore": {
     "/leads/{leadId}": {
       "schema": "Lead",
       "description": "Collection of incoming leads."
+    },
+    "/blogs/{blogId}": {
+      "schema": "Blog",
+      "description": "Collection of public blog posts and educational payment guides."
     }
   }
 }
