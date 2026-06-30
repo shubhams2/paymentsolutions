@@ -51,8 +51,8 @@ interface ProviderData {
 
 const PROVIDERS: ProviderData[] = [
   {
-    id: "worldpay",
-    name: "Worldpay (Partner Panel)",
+    id: "clover",
+    name: "Clover by Fiserv (Partner Panel)",
     logoBg: "bg-navy",
     terminalType: "Wi-Fi & 4G SIM Android",
     monthlyRental: 15.00,
@@ -115,7 +115,7 @@ const PROVIDERS: ProviderData[] = [
       "Backed by a major trusted UK High Street Bank"
     ],
     cons: [
-      "Debit rates are slightly higher than Worldpay or Elavon",
+      "Debit rates are slightly higher than Clover or Elavon",
       "Includes small 1p auth fee"
     ],
     bestFor: "Medium retail shops demanding low overhead and quick setup.",
@@ -331,7 +331,7 @@ export default function Compare() {
     <div className="pt-24 bg-gradient-to-b from-gray-50 via-white to-gray-50 min-h-screen">
       <SEO
         title="Compare UK Card Machine Providers | Phalam Payments UK"
-        description="Dynamic comparison of Worldpay, Tyl, Elavon, and Zettle terminal costs. Put your monthly turnover in our calculator to accurately compare real merchant fees."
+        description="Dynamic comparison of Clover, Tyl, Elavon, and Zettle terminal costs. Put your monthly turnover in our calculator to accurately compare real merchant fees."
         schema={{
           "@context": "https://schema.org",
           "@type": "ProductCollection",
@@ -602,7 +602,7 @@ export default function Compare() {
                   {monthlyTurnover < 2500 ? (
                     <span>Based on your Low Monthly Turnover (<strong>£{monthlyTurnover.toLocaleString()}</strong>), pay-as-you-go terminals (like <strong>Zettle</strong>) are recommended as they avoid minimum billing statements and monthly rental commitments altogether.</span>
                   ) : (
-                    <span>Based on your High Monthly Turnover (<strong>£{monthlyTurnover.toLocaleString()}</strong>), standard terminal rentals with low interchange fees (like <strong>Worldpay</strong> or <strong>Elavon</strong>) save you significant money compared to flat-rate 1.75% models.</span>
+                    <span>Based on your High Monthly Turnover (<strong>£{monthlyTurnover.toLocaleString()}</strong>), standard terminal rentals with low interchange fees (like <strong>Clover by Fiserv</strong> or <strong>Elavon</strong>) save you significant money compared to flat-rate 1.75% models.</span>
                   )}
                 </p>
               </div>
