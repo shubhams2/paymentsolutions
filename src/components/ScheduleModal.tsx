@@ -1,259 +1,407 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { X, ArrowRight, CheckCircle2, ShieldCheck } from "lucide-react";
+import {
+  X,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Calendar as CalendarIcon,
+  User,
+  Mail,
+  Phone,
+  CheckCircle2,
+  ShieldCheck,
+  Loader2
+} from "lucide-react";
+import {
+  format,
+  addDays,
+  startOfMonth,
+  endOfMonth,
+  startOfWeek,
+  endOfWeek,
+  isSameMonth,
+  isSameDay,
+  addMonths,
+  subMonths,
+  eachDayOfInterval,
+  isBefore,
+  startOfToday
+} from "date-fns";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { cn } from "../lib/utils";
+
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../lib/firebase";
 
-export function LeadCaptureModal() {
-  const [isOpen, setIsOpen] = useState(false);
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
-  const [validationError, setValidationError] = useState<string | null>(null);
+const bookingSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters"),
+  email: z.string().email("Invalid email address"),
+  phone: z.string().regex(/^[\d\s\-+()]{7,20}$/, "Please enter a valid phone number"),
+  businessName: z.string().optional(),
+  monthlyTurnover: z.string().optional(),
+});
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const forceTest = params.get("test_popup") === "true";
+type BookingFormValues = z.infer<typeof bookingSchema>;
 
-    // Detect if we are in development/preview env (everything except production website)
-    const isProduction = window.location.hostname === "phalampayments.co.uk" || window.location.hostname === "www.phalampayments.co.uk";
+interface ScheduleModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
 
-    // Prevent showing if already completed or dismissed
-    const hasDismissed = sessionStorage.getItem("lead_popup_dismissed") === "true";
-    const hasSubmitted = localStorage.getItem("lead_popup_submitted") === "true";
+type Step = "date" | "time" | "details" | "success";
 
-    if (isProduction && !forceTest && (hasDismissed || hasSubmitted)) {
-      console.log("Phalam Payments Popup: Suppressed in production due to user settings.");
-      return;
+export function ScheduleModal({ isOpen, onClose }: ScheduleModalProps) {
+  const [step, setStep] = useState<Step>("date");
+  const [selectedDate, setSelectedDate] = useState<Date>(addDays(new Date(), 1));
+  const [selectedTime, setSelectedTime] = useState<string | null>(null);
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [isLoading, setIsLoading] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset
+  } = useForm<BookingFormValues>({
+    resolver: zodResolver(bookingSchema)
+  });
+
+  const timeSlots = useMemo(() => {
+    const slots = [];
+    for (let i = 0; i < 24; i++) {
+      const hour = i.toString().padStart(2, "0");
+      slots.push(`${hour}:00`);
+      slots.push(`${hour}:30`);
     }
-
-    console.log("Phalam Payments: Scroll Tracker activated! (Scroll down 150px to trigger the quote modal)");
-
-    const checkScroll = () => {
-      const scrollPosition = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
-      // Trigger modal when scrolled 150px or more
-      if (scrollPosition > 150) {
-        console.log("Phalam Payments: Scroll threshold met (Position:", scrollPosition + "px). Displaying quote modal.");
-        setIsOpen(true);
-        window.removeEventListener("scroll", checkScroll);
-      }
-    };
-
-    // Check immediately on mount in case the page is already scrolled
-    checkScroll();
-
-    window.addEventListener("scroll", checkScroll);
-    return () => window.removeEventListener("scroll", checkScroll);
+    return slots;
   }, []);
 
-  const handleClose = () => {
-    setIsOpen(false);
-    // Use sessionStorage so the user can easily test and see it again on refresh!
-    sessionStorage.setItem("lead_popup_dismissed", "true");
-  };
+  const calendarDays = useMemo(() => {
+    const start = startOfWeek(startOfMonth(currentMonth), { weekStartsOn: 1 });
+    const end = endOfWeek(endOfMonth(currentMonth), { weekStartsOn: 1 });
+    return eachDayOfInterval({ start, end });
+  }, [currentMonth]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setValidationError(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
-    // Validate name and phone
-    if (!name.trim()) {
-      setValidationError("Please enter your name.");
-      return;
-    }
-
-    // Simple UK phone validation check: must contain digits, spaces or symbols and be at least 7 chars
-    const phoneRegex = /^[\d\s\-+()]{7,20}$/;
-    if (!phone.trim()) {
-      setValidationError("Please enter your phone number.");
-      return;
-    }
-    if (!phoneRegex.test(phone.trim())) {
-      setValidationError("Please enter a valid phone number.");
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    // Generate clean dummy email info for integration with backend which requests email
-    const cleanName = name.toLowerCase().replace(/[^a-z0-9]/g, "");
-    const generatedEmail = `${cleanName || "lead"}-${Date.now()}@no-email.phalampayments-lead.co.uk`;
+  const handleBooking = async (data: BookingFormValues) => {
+    setIsLoading(true);
+    setSubmitError(null);
 
     try {
-      // 1. Direct Firestore Save
-      await addDoc(collection(db, "leads"), {
-        name: name.trim(),
-        phone: phone.trim(),
-        email: generatedEmail,
-        source: "scroll_popup",
-        createdAt: serverTimestamp(),
-      });
+      try {
+        await addDoc(collection(db, "leads"), {
+          ...data,
+          appointmentDate: format(selectedDate, "PPP"),
+          appointmentTime: selectedTime,
+          source: "consultation_booking",
+          createdAt: serverTimestamp(),
+        });
+      } catch (dbError: any) {
+        console.error("Firestore Client save failed:", dbError);
+        throw new Error(`Database error: ${dbError.message}`);
+      }
 
-      // 2. Api Backend Lead processing & Notifications
       try {
         const response = await fetch("/leads", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            name: name.trim(),
-            phone: phone.trim(),
-            email: generatedEmail,
-            source: "scroll_popup",
+            ...data,
+            appointmentDate: format(selectedDate, "PPP"),
+            appointmentTime: selectedTime,
+            source: "consultation_booking",
           }),
         });
-        if (!response.ok) {
-          console.warn("Cloudflare Pages Function request failed in LeadCaptureModal:", response.status);
+
+        if (response.ok) {
+          setStep("success");
+        } else {
+          console.warn("Cloudflare Pages Function request failed in ScheduleModal:", response.status);
+          // Still mark as successful since Firestore document was written successfully!
+          setStep("success");
         }
       } catch (fetchErr) {
-        console.warn("Warning: Cloudflare Pages Function '/leads' request failed in LeadCaptureModal:", fetchErr);
+        console.warn("Warning: Cloudflare Pages Function '/leads' email trigger failed in ScheduleModal:", fetchErr);
+        // Continue and succeed since DB write was successful
+        setStep("success");
       }
-
-      setIsSuccess(true);
-      localStorage.setItem("lead_popup_submitted", "true");
     } catch (error: any) {
-      console.error("Popup lead submission error:", error);
-      setValidationError("There was an issue processing your request. Please try again.");
+      console.error("Booking error:", error);
+      setSubmitError(error.message || "An unexpected error occurred. Please try again.");
     } finally {
-      setIsSubmitting(false);
+      setIsLoading(false);
     }
   };
 
+  const resetModal = () => {
+    setStep("date");
+    setSelectedTime(null);
+    reset();
+    onClose();
+  };
+
+  if (!isOpen) return null;
+
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <div id="scroll-lead-popup-container" className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          {/* Translucent Backdrop Blur Blur styling */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={handleClose}
-            className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
-          />
+    <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={resetModal}
+        className="absolute inset-0 bg-navy/60 backdrop-blur-sm"
+      />
 
-          {/* Modal Container */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            transition={{ type: "spring", duration: 0.5, bounce: 0.2 }}
-            className="relative bg-white w-full max-w-[500px] rounded-[24px] shadow-2xl p-8 sm:p-10 text-slate-800 z-10 overflow-hidden border border-slate-100"
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.9, y: 20 }}
+        className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row min-h-[500px]"
+      >
+        {/* Sidebar Info */}
+        <div className="md:w-1/3 bg-navy p-8 text-white">
+          <div className="mb-8">
+            <p className="text-gold text-xs font-bold uppercase tracking-widest mb-2 font-display">Service</p>
+            <h3 className="text-lg font-bold">Free Payment Audit</h3>
+            <p className="text-blue-100/60 text-xs mt-2">30-minute discovery call with a UK consultant.</p>
+          </div>
+
+          <div className="space-y-6">
+            <div className="flex items-center gap-3 text-sm">
+              <Clock className="w-4 h-4 text-gold" />
+              <span>30 Minutes</span>
+            </div>
+            {selectedDate && (
+              <div className="flex items-start gap-3 text-sm animate-in fade-in slide-in-from-left-2">
+                <CalendarIcon className="w-4 h-4 text-gold shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-gold">{format(selectedDate, "EEEE, MMMM do")}</p>
+                  {selectedTime && <p className="text-blue-100/60">{selectedTime} (GMT)</p>}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="mt-auto pt-8 border-t border-white/10 hidden md:block">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-gold/20 flex items-center justify-center">
+                <CheckCircle2 className="w-4 h-4 text-gold" />
+              </div>
+              <p className="text-xs text-blue-100/60 leading-tight">Secure, independent consultancy.</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Action Area */}
+        <div className="flex-grow p-6 md:p-10 flex flex-col h-full overflow-y-auto max-h-[80vh] md:max-h-none">
+          <button
+            onClick={resetModal}
+            className="absolute top-6 right-6 p-2 text-gray-400 hover:text-navy transition-colors"
           >
-            {/* Close button X */}
-            <button
-              onClick={handleClose}
-              className="absolute top-5 right-5 text-slate-400 hover:text-slate-600 transition-colors p-1.5 hover:bg-slate-50 rounded-full cursor-pointer"
-              aria-label="Close quote modal"
-            >
-              <X className="w-5 h-5" />
-            </button>
+            <X className="w-6 h-6" />
+          </button>
 
-            {!isSuccess ? (
-              <div className="flex flex-col">
-                {/* Visual Label */}
-                <span className="text-violet-600 font-semibold text-xs uppercase tracking-widest mb-1.5 block">
-                  Limited Time Quote
-                </span>
+          {step === "date" && (
+            <div className="animate-in fade-in slide-in-from-right-4">
+              <h2 className="text-2xl font-bold text-navy mb-6">Select a Date</h2>
 
-                {/* Heading */}
-                <h3 className="font-sans font-extrabold text-2xl sm:text-3xl text-slate-900 tracking-tight leading-tight mb-2">
-                  Get a Free Card Machine Quote
-                </h3>
+              <div className="flex items-center justify-between mb-6">
+                <h4 className="font-bold text-navy">{format(currentMonth, "MMMM yyyy")}</h4>
+                <div className="flex gap-2">
+                  <button onClick={() => setCurrentMonth(subMonths(currentMonth, 1))} className="p-2 hover:bg-gray-100 rounded-lg transition-colors border border-gray-100">
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  <button onClick={() => setCurrentMonth(addMonths(currentMonth, 1))} className="p-2 hover:bg-gray-100 rounded-lg transition-colors border border-gray-100">
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
 
-                {/* Subtitle */}
-                <p className="text-slate-500 font-normal text-sm sm:text-[15px] leading-relaxed mb-6">
-                  Compare rates from top UK providers, tailored to your business.
-                </p>
+              <div className="grid grid-cols-7 gap-1 mb-2">
+                {["M", "T", "W", "T", "F", "S", "S"].map((day, i) => (
+                  <div key={i} className="text-center text-[10px] font-bold text-gray-400 py-2">{day}</div>
+                ))}
+              </div>
 
-                {/* Error Banner */}
-                {validationError && (
-                  <div className="mb-4 bg-rose-50 border border-rose-100 text-rose-600 text-xs px-3.5 py-2.5 rounded-lg font-medium">
-                    {validationError}
-                  </div>
+              <div className="grid grid-cols-7 gap-1">
+                {calendarDays.map((day, i) => {
+                  const isToday = isSameDay(day, new Date());
+                  const isSelected = isSameDay(day, selectedDate);
+                  const isPrevMonth = !isSameMonth(day, currentMonth);
+                  const isPast = isBefore(day, startOfToday());
+                  const isDisabled = isPast;
+
+                  return (
+                    <button
+                      key={i}
+                      disabled={isDisabled}
+                      onClick={() => setSelectedDate(day)}
+                      className={cn(
+                        "h-12 flex flex-col items-center justify-center rounded-xl transition-all relative text-sm font-medium",
+                        isPrevMonth && "text-gray-300",
+                        isDisabled ? "cursor-not-allowed text-gray-200" : "hover:bg-blue-50 text-navy",
+                        isSelected && "bg-navy text-white hover:bg-navy shadow-lg shadow-navy/20",
+                        isToday && !isSelected && "text-gold font-bold underline"
+                      )}
+                    >
+                      {format(day, "d")}
+                      {isSelected && (
+                        <motion.div layoutId="activeDay" className="absolute inset-0 border-2 border-gold rounded-xl pointer-events-none" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <button
+                onClick={() => setStep("time")}
+                className="w-full bg-navy text-white font-bold py-4 rounded-xl mt-8 transition-transform hover:scale-[1.02] active:scale-[0.98]"
+              >
+                Continue to Times
+              </button>
+            </div>
+          )}
+
+          {step === "time" && (
+            <div className="animate-in fade-in slide-in-from-right-4">
+              <button onClick={() => setStep("date")} className="flex items-center gap-2 text-sm text-gray-500 hover:text-navy mb-4 transition-colors">
+                <ChevronLeft className="w-4 h-4" /> Change Date
+              </button>
+              <h2 className="text-2xl font-bold text-navy mb-6">Available Slots</h2>
+
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                {timeSlots.map((time) => (
+                  <button
+                    key={time}
+                    onClick={() => setSelectedTime(time)}
+                    className={cn(
+                      "py-2 px-1 rounded-lg border-2 font-bold text-[11px] transition-all",
+                      selectedTime === time
+                        ? "bg-gold border-gold text-navy shadow-lg shadow-gold/20 scale-105"
+                        : "border-gray-100 text-navy hover:border-gold/50"
+                    )}
+                  >
+                    {time}
+                  </button>
+                ))}
+              </div>
+
+              <button
+                disabled={!selectedTime}
+                onClick={() => setStep("details")}
+                className="w-full bg-navy text-white disabled:bg-gray-200 font-bold py-4 rounded-xl mt-8 transition-transform hover:scale-[1.02] active:scale-[0.98]"
+              >
+                Confirm Time
+              </button>
+            </div>
+          )}
+
+          {step === "details" && (
+            <div className="animate-in fade-in slide-in-from-right-4">
+              <button onClick={() => setStep("time")} className="flex items-center gap-2 text-sm text-gray-500 hover:text-navy mb-4 transition-colors">
+                <ChevronLeft className="w-4 h-4" /> Change Time
+              </button>
+              <h2 className="text-2xl font-bold text-navy mb-2">Final Details</h2>
+              <p className="text-gray-500 text-sm mb-8">Please provide your contact info to confirm the booking.</p>
+
+              <form onSubmit={handleSubmit(handleBooking)} className="space-y-4">
+                <div className="relative">
+                  <User className="absolute left-4 top-4 w-5 h-5 text-gray-400" />
+                  <input
+                    {...register("name")}
+                    placeholder="Full Name"
+                    className={cn(
+                      "w-full pl-12 pr-4 py-4 bg-gray-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-navy/5 focus:border-navy transition-all",
+                      errors.name ? "border-red-500" : "border-gray-100"
+                    )}
+                  />
+                  {errors.name && <p className="text-red-500 text-[10px] mt-1 ml-1">{errors.name.message}</p>}
+                </div>
+                <div className="relative">
+                  <Mail className="absolute left-4 top-4 w-5 h-5 text-gray-400" />
+                  <input
+                    {...register("email")}
+                    placeholder="Work Email"
+                    className={cn(
+                      "w-full pl-12 pr-4 py-4 bg-gray-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-navy/5 focus:border-navy transition-all",
+                      errors.email ? "border-red-500" : "border-gray-100"
+                    )}
+                  />
+                  {errors.email && <p className="text-red-500 text-[10px] mt-1 ml-1">{errors.email.message}</p>}
+                </div>
+                <div className="relative">
+                  <Phone className="absolute left-4 top-4 w-5 h-5 text-gray-400" />
+                  <input
+                    {...register("phone")}
+                    placeholder="Phone Number"
+                    className={cn(
+                      "w-full pl-12 pr-4 py-4 bg-gray-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-navy/5 focus:border-navy transition-all",
+                      errors.phone ? "border-red-500" : "border-gray-100"
+                    )}
+                  />
+                  {errors.phone && <p className="text-red-500 text-[10px] mt-1 ml-1">{errors.phone.message}</p>}
+                </div>
+
+                <div className="relative">
+                  <ShieldCheck className="absolute left-4 top-4 w-5 h-5 text-gray-400" />
+                  <select
+                    {...register("monthlyTurnover")}
+                    className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-navy/5 focus:border-navy transition-all text-sm appearance-none"
+                  >
+                    <option value="">Monthly Turnover (Optional)</option>
+                    <option value="New Business">New Business / £0</option>
+                    <option value="Under £5k">Under £5,000</option>
+                    <option value="£5k - £20k">£5,000 - £20,000</option>
+                    <option value="£20k - £50k">£20,000 - £50,000</option>
+                    <option value="£50k - £100k">£50,000 - £100,000</option>
+                    <option value="Over £100k">Over £100,000</option>
+                  </select>
+                </div>
+
+                {submitError && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    className="text-red-500 text-xs text-center font-medium bg-red-50 py-2 rounded-lg border border-red-100"
+                  >
+                    {submitError}
+                  </motion.div>
                 )}
 
-                {/* Grab form input */}
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div>
-                    <input
-                      type="text"
-                      placeholder="Your name"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      disabled={isSubmitting}
-                      className="w-full px-5 py-4 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-violet-500/10 focus:border-violet-500 text-[15px] sm:text-[16px] text-slate-900 bg-white placeholder-slate-400 transition-all outline-none"
-                    />
-                  </div>
-
-                  <div>
-                    <input
-                      type="tel"
-                      placeholder="Phone number"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      disabled={isSubmitting}
-                      className="w-full px-5 py-4 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-violet-500/10 focus:border-violet-500 text-[15px] sm:text-[16px] text-slate-900 bg-white placeholder-slate-400 transition-all outline-none"
-                    />
-                  </div>
-
-                  {/* Submit Button */}
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="w-full mt-2 bg-[#6366f1] hover:bg-[#5254eb] disabled:bg-violet-400 text-white font-semibold text-[16px] sm:text-lg py-4 px-6 rounded-2xl flex items-center justify-center gap-2 transition-all relative overflow-hidden active:scale-[0.99] cursor-pointer"
-                  >
-                    {isSubmitting ? (
-                      <div className="flex items-center gap-2">
-                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                        </svg>
-                        Calculating...
-                      </div>
-                    ) : (
-                      <>
-                        Get My Free Quote
-                        <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
-                      </>
-                    )}
-                  </button>
-                </form>
-
-                {/* Footer Subtext */}
-                <p className="text-slate-400 text-xs text-center mt-5 flex items-center justify-center gap-1.5 font-normal">
-                  <ShieldCheck className="w-3.5 h-3.5 text-slate-400" />
-                  Free service. No spam. Your data stays private.
-                </p>
-              </div>
-            ) : (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="flex flex-col items-center text-center py-6"
-              >
-                <div className="w-14 h-14 bg-emerald-50 rounded-full flex items-center justify-center mb-4">
-                  <CheckCircle2 className="w-8 h-8 text-emerald-500" />
-                </div>
-                <h3 className="font-sans font-extrabold text-2xl text-slate-900 tracking-tight leading-tight mb-2">
-                  Quote Request Received!
-                </h3>
-                <p className="text-slate-500 font-normal text-sm sm:text-[15px] leading-relaxed max-w-sm mb-6">
-                  Thank you, <strong className="text-slate-800 font-semibold">{name}</strong>. A payment systems analyst will review top UK rates and call you at <strong className="text-slate-800 font-semibold">{phone}</strong> within 24 hours.
-                </p>
                 <button
-                  onClick={() => setIsOpen(false)}
-                  className="px-6 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-sm transition-colors cursor-pointer"
+                  disabled={isLoading}
+                  type="submit"
+                  className="w-full bg-navy text-white font-bold py-4 rounded-xl mt-4 transition-transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
                 >
-                  Done
+                  {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Schedule Appointment"}
                 </button>
-              </motion.div>
-            )}
-          </motion.div>
+              </form>
+            </div>
+          )}
+
+          {step === "success" && (
+            <div className="flex-grow flex flex-col items-center justify-center text-center animate-in zoom-in-95 duration-500">
+              <div className="w-20 h-20 rounded-full bg-green-50 text-green-500 flex items-center justify-center mb-6">
+                <CheckCircle2 className="w-10 h-10" />
+              </div>
+              <h2 className="text-3xl font-bold text-navy mb-4">Confirmed!</h2>
+              <p className="text-gray-500 max-w-xs mx-auto leading-relaxed">
+                Your consultation is scheduled. Keep an eye on your inbox for the calendar invite and joining details.
+              </p>
+              <button
+                onClick={resetModal}
+                className="mt-8 text-navy font-bold hover:underline"
+              >
+                Back to Site
+              </button>
+            </div>
+          )}
         </div>
-      )}
-    </AnimatePresence>
+      </motion.div>
+    </div>
   );
 }
