@@ -60,10 +60,10 @@ const PROVIDERS: ProviderData[] = [
     contractTerm: "18 Months Contract",
     settlement: "Next Working Day Settlement (Free of charge)",
     rates: {
-      personalDebit: 0.65,
-      personalCredit: 0.95,
-      businessDebit: 1.46,
-      businessCredit: 2.00,
+      personalDebit: 0.29,
+      personalCredit: 0.50,
+      businessDebit: 1.10,
+      businessCredit: 1.20,
       amex: 2.00,
     },
     refundFee: 0.30,
@@ -72,16 +72,16 @@ const PROVIDERS: ProviderData[] = [
     cnpIsSurcharge: true,
     intlFee: "Up to 1.80%",
     minBilling: 20.00,
-    authFee: 1.2, // 1.2 pence
+    authFee: 2.0, // 2.0 pence
     pros: [
-      "Extremely low processing rates for Personal Debit (0.65%) & Credit (0.95%)",
+      "Extremely low processing rates for Personal Debit (0.29%) & Credit (0.50%)",
       "Free next working day settlement is standard",
       "First 6 months terminal rental cut in half",
       "Very stable and secure global platform"
     ],
     cons: [
       "£20 monthly minimum billing clause applies",
-      "1.2p per transaction authorisation fee"
+      "2p per transaction authorisation fee"
     ],
     bestFor: "Established high-volume retail businesses looking for industry-low rates.",
   },
@@ -417,7 +417,7 @@ export default function Compare() {
                   id="ticket-size"
                   type="range"
                   min="5"
-                  max="200"
+                  max="1000"
                   step="5"
                   value={avgTicketSize}
                   onChange={(e) => setAvgTicketSize(Number(e.target.value))}
@@ -425,9 +425,9 @@ export default function Compare() {
                 />
                 <div className="flex justify-between text-[10px] text-blue-200/50 mt-1 font-mono font-semibold">
                   <span>£5</span>
-                  <span>£50</span>
-                  <span>£100</span>
-                  <span>£200</span>
+                  <span>£250</span>
+                  <span>£500</span>
+                  <span>£1000</span>
                 </div>
                 <p className="text-[10px] text-blue-200/60 mt-1">
                   Average monthly volume: <strong className="text-white font-mono">{Math.round(monthlyTurnover / avgTicketSize)} txns</strong> (impacts auth charges).
@@ -443,7 +443,7 @@ export default function Compare() {
                 {/* Personal UK Debit */}
                 <div>
                   <div className="flex justify-between items-center text-xs mb-1">
-                    <span className="text-blue-100 text-[11px]">Personal UK Debit <span className="text-gold font-medium font-mono">0.65%</span></span>
+                    <span className="text-blue-100 text-[11px]">Personal UK Debit <span className="text-gold font-medium font-mono">0.29%</span></span>
                     <span className="text-gold font-mono font-bold text-[11px]">{pDebitPercent.toFixed(0)}%</span>
                   </div>
                   <input
@@ -460,7 +460,7 @@ export default function Compare() {
                 {/* Personal UK Credit */}
                 <div>
                   <div className="flex justify-between items-center text-xs mb-1">
-                    <span className="text-blue-100 text-[11px]">Personal UK Credit <span className="text-gold font-medium font-mono">0.95%</span></span>
+                    <span className="text-blue-100 text-[11px]">Personal UK Credit <span className="text-gold font-medium font-mono">0.5%</span></span>
                     <span className="text-gold font-mono font-bold text-[11px]">{pCreditPercent.toFixed(0)}%</span>
                   </div>
                   <input
@@ -477,7 +477,7 @@ export default function Compare() {
                 {/* Business Debit */}
                 <div>
                   <div className="flex justify-between items-center text-xs mb-1">
-                    <span className="text-blue-100 text-[11px]">Business Debit <span className="text-gold font-medium font-mono">1.46%</span></span>
+                    <span className="text-blue-100 text-[11px]">Business Debit <span className="text-gold font-medium font-mono">1.1%</span></span>
                     <span className="text-gold font-mono font-bold text-[11px]">{bDebitPercent.toFixed(0)}%</span>
                   </div>
                   <input
@@ -494,7 +494,7 @@ export default function Compare() {
                 {/* Business Credit Card */}
                 <div>
                   <div className="flex justify-between items-center text-xs mb-1">
-                    <span className="text-blue-100 text-[11px]">Business Credit Card <span className="text-gold font-medium font-mono">2%</span></span>
+                    <span className="text-blue-100 text-[11px]">Business Credit Card <span className="text-gold font-medium font-mono">1.2%</span></span>
                     <span className="text-gold font-mono font-bold text-[11px]">{bCreditPercent.toFixed(0)}%</span>
                   </div>
                   <input

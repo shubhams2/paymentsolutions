@@ -265,7 +265,7 @@ export default function Home() {
                       id="ticket-size"
                       type="range"
                       min="5"
-                      max="200"
+                      max="1000"
                       step="5"
                       value={avgTicketSize}
                       onChange={(e) => setAvgTicketSize(Number(e.target.value))}
@@ -273,9 +273,9 @@ export default function Home() {
                     />
                     <div className="flex justify-between text-[10px] text-blue-200/50 mt-1 font-mono font-semibold">
                       <span>£5</span>
-                      <span>£50</span>
-                      <span>£100</span>
-                      <span>£200</span>
+                      <span>£250</span>
+                      <span>£500</span>
+                      <span>£1000</span>
                     </div>
                     <p className="text-[10px] text-blue-200/60 mt-1">
                       Average monthly volume: <strong className="text-white font-mono">{Math.round(monthlyTurnover / avgTicketSize)} txns</strong> (impacts auth charges).
@@ -291,7 +291,7 @@ export default function Home() {
                     {/* Personal UK Debit */}
                     <div>
                       <div className="flex justify-between items-center text-xs mb-1">
-                        <span className="text-blue-100 text-[11px]">Personal UK Debit <span className="text-gold font-medium font-mono">0.65%</span></span>
+                        <span className="text-blue-100 text-[11px]">Personal UK Debit <span className="text-gold font-medium font-mono">0.29%</span></span>
                         <span className="text-gold font-mono font-bold text-[11px]">{pDebitPercent.toFixed(0)}%</span>
                       </div>
                       <input
@@ -308,7 +308,7 @@ export default function Home() {
                     {/* Personal UK Credit */}
                     <div>
                       <div className="flex justify-between items-center text-xs mb-1">
-                        <span className="text-blue-100 text-[11px]">Personal UK Credit <span className="text-gold font-medium font-mono">0.95%</span></span>
+                        <span className="text-blue-100 text-[11px]">Personal UK Credit <span className="text-gold font-medium font-mono">0.5%</span></span>
                         <span className="text-gold font-mono font-bold text-[11px]">{pCreditPercent.toFixed(0)}%</span>
                       </div>
                       <input
@@ -325,7 +325,7 @@ export default function Home() {
                     {/* Business Debit */}
                     <div>
                       <div className="flex justify-between items-center text-xs mb-1">
-                        <span className="text-blue-100 text-[11px]">Business Debit <span className="text-gold font-medium font-mono">1.46%</span></span>
+                        <span className="text-blue-100 text-[11px]">Business Debit <span className="text-gold font-medium font-mono">1.1%</span></span>
                         <span className="text-gold font-mono font-bold text-[11px]">{bDebitPercent.toFixed(0)}%</span>
                       </div>
                       <input
@@ -342,7 +342,7 @@ export default function Home() {
                     {/* Business Credit Card */}
                     <div>
                       <div className="flex justify-between items-center text-xs mb-1">
-                        <span className="text-blue-100 text-[11px]">Business Credit Card <span className="text-gold font-medium font-mono">2%</span></span>
+                        <span className="text-blue-100 text-[11px]">Business Credit Card <span className="text-gold font-medium font-mono">1.2%</span></span>
                         <span className="text-gold font-mono font-bold text-[11px]">{bCreditPercent.toFixed(0)}%</span>
                       </div>
                       <input
