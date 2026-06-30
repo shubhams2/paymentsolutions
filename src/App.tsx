@@ -12,6 +12,7 @@ import CookiePolicy from "./pages/CookiePolicy";
 import AdminLeads from "./pages/AdminLeads";
 import RetailConsulting from "./pages/RetailConsulting";
 import EcommerceConsulting from "./pages/EcommerceConsulting";
+import Compare from "./pages/Compare";
 import Blog from "./pages/Blog";
 import { useEffect } from "react";
 
@@ -38,6 +39,7 @@ export default function App() {
             <Route path="/" element={<Home />} />
             <Route path="/retail-consulting" element={<RetailConsulting />} />
             <Route path="/ecommerce-consulting" element={<EcommerceConsulting />} />
+            <Route path="/compare" element={<Compare />} />
             <Route path="/blog" element={<Blog />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/terms-of-use" element={<TermsOfUse />} />

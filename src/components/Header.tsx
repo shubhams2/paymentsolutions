@@ -9,6 +9,7 @@ import { auth } from "../lib/firebase";
 const navLinks = [
   { name: "Retail Solutions", href: "/retail-consulting" },
   { name: "E-Commerce Gateway", href: "/ecommerce-consulting" },
+  { name: "Compare Rates", href: "/compare" },
   { name: "Knowledge Hub", href: "/blog" },
   { name: "Why Us", href: "/#why-us" },
   { name: "How It Works", href: "/#how-it-works" },

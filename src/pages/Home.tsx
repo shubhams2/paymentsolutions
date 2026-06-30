@@ -1,9 +1,10 @@
 
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import { motion } from "motion/react";
-import { 
-  CreditCard, 
-  ShieldCheck, 
+import {
+  CreditCard,
+  ShieldCheck,
   ArrowRight,
   CheckCircle2,
   Phone,
@@ -22,7 +23,8 @@ import {
   UserCircle,
   Store,
   Building2,
-  CalendarCheck
+  CalendarCheck,
+  TrendingDown
 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -55,6 +57,27 @@ export default function Home() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isScheduleOpen, setIsScheduleOpen] = useState(false);
+
+  // Inputs for Dynamic Fee Calculation
+  const [monthlyTurnover, setMonthlyTurnover] = useState<number>(5000);
+  const [avgTicketSize, setAvgTicketSize] = useState<number>(20);
+  const [cnpPercent, setCnpPercent] = useState<number>(10);
+  const [monthlyRefunds, setMonthlyRefunds] = useState<number>(5);
+
+  // Card distribution volume shares (normalized dynamically to equal 100%)
+  const [pDebitShare, setPDebitShare] = useState<number>(45);
+  const [pCreditShare, setPCreditShare] = useState<number>(25);
+  const [bDebitShare, setBDebitShare] = useState<number>(15);
+  const [bCreditShare, setBCreditShare] = useState<number>(10);
+  const [amexShare, setAmexShare] = useState<number>(5);
+
+  // Compute normalized values for rendering
+  const totalShare = Math.max(1, pDebitShare + pCreditShare + bDebitShare + bCreditShare + amexShare);
+  const pDebitPercent = (pDebitShare / totalShare) * 100;
+  const pCreditPercent = (pCreditShare / totalShare) * 100;
+  const bDebitPercent = (bDebitShare / totalShare) * 100;
+  const bCreditPercent = (bCreditShare / totalShare) * 100;
+  const amexPercent = (amexShare / totalShare) * 100;
 
   const {
     register,
@@ -120,12 +143,13 @@ export default function Home() {
         <div className="absolute -top-32 -right-32 w-[500px] h-[500px] rounded-full opacity-10" style={{ background: "radial-gradient(circle, #e8a800, transparent 70%)" }}></div>
         <div className="absolute -bottom-40 -left-20 w-[400px] h-[400px] rounded-full opacity-10" style={{ background: "radial-gradient(circle, white, transparent 70%)" }}></div>
 
-        <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-20 w-full">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             <motion.div
               initial={{ opacity: 0, x: -30 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8 }}
+              className="lg:col-span-7"
             >
               <div className="inline-flex items-center gap-2 bg-white/10 text-white text-xs font-semibold uppercase tracking-wider px-4 py-1.5 rounded-full mb-6">
                 <ShieldCheck className="w-3.5 h-3.5 text-gold" />
@@ -144,9 +168,9 @@ export default function Home() {
                 >
                   Book a free Consultation <CalendarCheck className="w-4 h-4" />
                 </button>
-                <a href="#services" className="inline-flex items-center justify-center px-7 py-3.5 text-base font-semibold text-white border-2 border-white/40 rounded-lg hover:bg-white/10 transition-all">
-                  Explore Services
-                </a>
+                <Link to="/compare" className="inline-flex items-center justify-center px-7 py-3.5 text-base font-semibold text-white border-2 border-white/40 rounded-lg hover:bg-white/10 transition-all">
+                  Compare Rate Options
+                </Link>
               </div>
 
               <div className="mt-10 flex flex-wrap items-center gap-6">
@@ -193,26 +217,209 @@ export default function Home() {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.8, delay: 0.2 }}
-              className="hidden lg:block"
+              className="lg:col-span-5 w-full"
             >
-              <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-8 text-white space-y-6">
-                <p className="text-xs font-semibold uppercase tracking-widest text-blue-200 mb-2">Why Businesses Choose Us</p>
-                <div className="flex items-center gap-4 border-b border-white/10 pb-5 last:border-0 last:pb-0">
-                  <span className="font-display font-bold text-2xl text-gold min-w-[80px]">500+</span>
-                  <span className="text-blue-100 text-sm leading-snug">Merchants Supported Across the UK</span>
+              <div className="bg-[#0b2447]/90 backdrop-blur-md text-white p-6 sm:p-7 rounded-3xl shadow-2xl flex flex-col gap-5 border border-white/10">
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <TrendingDown className="text-gold w-5 h-5 animate-pulse" />
+                    <h3 className="font-display font-bold text-xl text-white">Merchant Cost Calculator</h3>
+                  </div>
+                  <p className="text-blue-100/70 text-xs leading-relaxed">
+                    Adjust parameters below to compute live processing calculations based on our partner panel's true contract rules, auth fees, and minimum statement variables.
+                  </p>
                 </div>
-                <div className="flex items-center gap-4 border-b border-white/10 pb-5 last:border-0 last:pb-0">
-                  <span className="font-display font-bold text-2xl text-gold min-w-[80px]">4 Solutions</span>
-                  <span className="text-blue-100 text-sm leading-snug">Card · QR Code · Payment Link · POS</span>
+
+                <div className="space-y-4">
+                  {/* Parameter: Monthly Turnover */}
+                  <div>
+                    <div className="flex items-center justify-between text-sm mb-1 font-medium">
+                      <label htmlFor="turnover" className="text-blue-50">Estimated Monthly Turnover</label>
+                      <span className="text-gold font-mono font-bold text-base">£{monthlyTurnover.toLocaleString()}</span>
+                    </div>
+                    <input
+                      id="turnover"
+                      type="range"
+                      min="500"
+                      max="100000"
+                      step="500"
+                      value={monthlyTurnover}
+                      onChange={(e) => setMonthlyTurnover(Number(e.target.value))}
+                      className="w-full accent-gold bg-[#153a7e] rounded-lg appearance-none h-1.5 cursor-pointer"
+                    />
+                    <div className="flex justify-between text-[10px] text-blue-200/50 mt-1 font-mono">
+                      <span>£500</span>
+                      <span>£10k</span>
+                      <span>£50k</span>
+                      <span>£100k</span>
+                    </div>
+                  </div>
+
+                  {/* Parameter: Average Transaction Size */}
+                  <div>
+                    <div className="flex items-center justify-between text-sm mb-1 font-medium">
+                      <label htmlFor="ticket-size" className="text-blue-50">Average Transaction Size</label>
+                      <span className="text-gold font-mono font-bold">£{avgTicketSize}</span>
+                    </div>
+                    <input
+                      id="ticket-size"
+                      type="range"
+                      min="5"
+                      max="200"
+                      step="5"
+                      value={avgTicketSize}
+                      onChange={(e) => setAvgTicketSize(Number(e.target.value))}
+                      className="w-full accent-gold bg-[#153a7e] rounded-lg appearance-none h-1.5 cursor-pointer"
+                    />
+                    <div className="flex justify-between text-[10px] text-blue-200/50 mt-1 font-mono font-semibold">
+                      <span>£5</span>
+                      <span>£50</span>
+                      <span>£100</span>
+                      <span>£200</span>
+                    </div>
+                    <p className="text-[10px] text-blue-200/60 mt-1">
+                      Average monthly volume: <strong className="text-white font-mono">{Math.round(monthlyTurnover / avgTicketSize)} txns</strong> (impacts auth charges).
+                    </p>
+                  </div>
+
+                  {/* 5-way Card Type Distribution sliders */}
+                  <div className="bg-[#07255a] p-3.5 rounded-2xl border border-blue-900/50 space-y-3">
+                    <span className="text-[10px] text-blue-200/80 font-bold uppercase tracking-wider block mb-1">
+                      Card Type Split (% of Turnover)
+                    </span>
+
+                    {/* Personal UK Debit */}
+                    <div>
+                      <div className="flex justify-between items-center text-xs mb-1">
+                        <span className="text-blue-100 text-[11px]">Personal UK Debit <span className="text-gold font-medium font-mono">0.65%</span></span>
+                        <span className="text-gold font-mono font-bold text-[11px]">{pDebitPercent.toFixed(0)}%</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        step="5"
+                        value={pDebitShare}
+                        onChange={(e) => setPDebitShare(Number(e.target.value))}
+                        className="w-full accent-gold bg-[#153a7e] rounded appearance-none h-1 cursor-pointer"
+                      />
+                    </div>
+
+                    {/* Personal UK Credit */}
+                    <div>
+                      <div className="flex justify-between items-center text-xs mb-1">
+                        <span className="text-blue-100 text-[11px]">Personal UK Credit <span className="text-gold font-medium font-mono">0.95%</span></span>
+                        <span className="text-gold font-mono font-bold text-[11px]">{pCreditPercent.toFixed(0)}%</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        step="5"
+                        value={pCreditShare}
+                        onChange={(e) => setPCreditShare(Number(e.target.value))}
+                        className="w-full accent-gold bg-[#153a7e] rounded appearance-none h-1 cursor-pointer"
+                      />
+                    </div>
+
+                    {/* Business Debit */}
+                    <div>
+                      <div className="flex justify-between items-center text-xs mb-1">
+                        <span className="text-blue-100 text-[11px]">Business Debit <span className="text-gold font-medium font-mono">1.46%</span></span>
+                        <span className="text-gold font-mono font-bold text-[11px]">{bDebitPercent.toFixed(0)}%</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        step="5"
+                        value={bDebitShare}
+                        onChange={(e) => setBDebitShare(Number(e.target.value))}
+                        className="w-full accent-gold bg-[#153a7e] rounded appearance-none h-1 cursor-pointer"
+                      />
+                    </div>
+
+                    {/* Business Credit Card */}
+                    <div>
+                      <div className="flex justify-between items-center text-xs mb-1">
+                        <span className="text-blue-100 text-[11px]">Business Credit Card <span className="text-gold font-medium font-mono">2%</span></span>
+                        <span className="text-gold font-mono font-bold text-[11px]">{bCreditPercent.toFixed(0)}%</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        step="5"
+                        value={bCreditShare}
+                        onChange={(e) => setBCreditShare(Number(e.target.value))}
+                        className="w-full accent-gold bg-[#153a7e] rounded appearance-none h-1 cursor-pointer"
+                      />
+                    </div>
+
+                    {/* Amex Cards */}
+                    <div>
+                      <div className="flex justify-between items-center text-xs mb-1">
+                        <span className="text-blue-100 text-[11px]">Amex Cards <span className="text-gold font-medium font-mono">2%</span></span>
+                        <span className="text-gold font-mono font-bold text-[11px]">{amexPercent.toFixed(0)}%</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        step="5"
+                        value={amexShare}
+                        onChange={(e) => setAmexShare(Number(e.target.value))}
+                        className="w-full accent-gold bg-[#153a7e] rounded appearance-none h-1 cursor-pointer"
+                      />
+                    </div>
+                  </div>
+
+                  {/* CNP and Refunds Slider */}
+                  <div className="grid grid-cols-2 gap-3 pb-1">
+                    {/* CNP / Card Not Present */}
+                    <div>
+                      <div className="flex justify-between items-center text-xs mb-1 font-medium text-blue-100">
+                        <label htmlFor="cnp-percent" className="text-[11px]">CNP (Online)</label>
+                        <span className="text-gold font-mono text-[11px]">{cnpPercent}%</span>
+                      </div>
+                      <input
+                        id="cnp-percent"
+                        type="range"
+                        min="0"
+                        max="100"
+                        step="5"
+                        value={cnpPercent}
+                        onChange={(e) => setCnpPercent(Number(e.target.value))}
+                        className="w-full accent-gold bg-[#153a7e] rounded-lg appearance-none h-1 cursor-pointer"
+                      />
+                    </div>
+
+                    {/* Monthly Refunds */}
+                    <div>
+                      <div className="flex justify-between items-center text-xs mb-1 font-medium text-blue-100">
+                        <label htmlFor="refunds" className="text-[11px]">Refunds/Mo</label>
+                        <span className="text-gold font-mono text-[11px]">{monthlyRefunds}</span>
+                      </div>
+                      <input
+                        id="refunds"
+                        type="range"
+                        min="0"
+                        max="50"
+                        step="5"
+                        value={monthlyRefunds}
+                        onChange={(e) => setMonthlyRefunds(Number(e.target.value))}
+                        className="w-full accent-gold bg-[#153a7e] rounded-lg appearance-none h-1 cursor-pointer"
+                      />
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-center gap-4 border-b border-white/10 pb-5 last:border-0 last:pb-0">
-                  <span className="font-display font-bold text-2xl text-gold min-w-[80px]">98%</span>
-                  <span className="text-blue-100 text-sm leading-snug">Client Satisfaction Rate</span>
-                </div>
-                <div className="flex items-center gap-4 border-b border-white/10 pb-5 last:border-0 last:pb-0">
-                  <span className="font-display font-bold text-2xl text-gold min-w-[80px]">Free</span>
-                  <span className="text-blue-100 text-sm leading-snug">Initial Consultation, Always</span>
-                </div>
+
+                <Link
+                  to={`/compare?turnover=${monthlyTurnover}&ticket=${avgTicketSize}&pdebit=${pDebitShare}&pcredit=${pCreditShare}&bdebit=${bDebitShare}&bcredit=${bCreditShare}&amex=${amexShare}&cnp=${cnpPercent}&refunds=${monthlyRefunds}`}
+                  className="w-full inline-flex items-center justify-center gap-2 py-3 px-4 font-display font-bold text-sm text-navy-dark bg-gold rounded-2xl hover:bg-gold/90 hover:scale-[1.02] shadow-md hover:shadow-lg transition-all text-center"
+                >
+                  Compare Rate Options <ArrowRight className="w-4.5 h-4.5" />
+                </Link>
               </div>
             </motion.div>
           </div>
