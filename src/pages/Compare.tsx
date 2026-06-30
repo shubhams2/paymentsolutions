@@ -86,39 +86,39 @@ const PROVIDERS: ProviderData[] = [
     bestFor: "Established high-volume retail businesses looking for industry-low rates.",
   },
   {
-    id: "tyl",
-    name: "Tyl by NatWest",
-    logoBg: "bg-blue-600",
-    terminalType: "Wi-Fi & 4G SIM Card Terminal",
+    id: "teya",
+    name: "Teya Card Terminal",
+    logoBg: "bg-orange-600",
+    terminalType: "High-Speed Android Terminal (Wi-Fi/4G SIM included)",
     monthlyRental: 9.99,
-    monthlyRentalPromo: "Standard rental fee, no initial setup charges",
-    contractTerm: "12 Months Contract",
-    settlement: "Next Business Day for NatWest customers (Free)",
+    monthlyRentalPromo: "Free high-speed paper roll, no setup fees",
+    contractTerm: "30-Day Rolling Contract",
+    settlement: "Next-Day Settlement (including weekends)",
     rates: {
-      personalDebit: 1.10,
-      personalCredit: 1.10,
-      businessDebit: 1.40,
-      businessCredit: 1.95,
-      amex: 2.10,
+      personalDebit: 1.69,
+      personalCredit: 1.69,
+      businessDebit: 1.69,
+      businessCredit: 1.69,
+      amex: 1.69,
     },
-    refundFee: 0.20,
-    cnpFee: "1.35% Flat Processing Rate",
-    cnpFeePercent: 1.35,
+    refundFee: 0.15,
+    cnpFee: "1.69% Flat Rate (No CNP surcharge)",
+    cnpFeePercent: 1.69,
     cnpIsSurcharge: false,
     intlFee: "Up to 2.50%",
-    minBilling: 10.00,
-    authFee: 1.0, // 1.0 pence
+    minBilling: 0.00,
+    authFee: 0.0, // 0.0 pence
     pros: [
-      "Low monthly terminal lease hire (£9.99/mo)",
-      "Shorter 12-month commitment standard term",
-      "Flat rate for personal cards prevents dynamic pricing billing surprises",
-      "Backed by a major trusted UK High Street Bank"
+      "Simple 1.69% flat-rate pricing for all card types",
+      "No PCI compliance fees & zero authorisation charges",
+      "Next-day funding including Saturdays & Sundays",
+      "Super flexible 30-day rolling contract agreement"
     ],
     cons: [
-      "Debit rates are slightly higher than Clover or Elavon",
-      "Includes small 1p auth fee"
+      "Higher debit rate than Clover interchange-plus model",
+      "Flat-rate premium can cost more at very high card volumes"
     ],
-    bestFor: "Medium retail shops demanding low overhead and quick setup.",
+    bestFor: "Merchants wanting simplicity, fast payouts (including weekends), and zero hidden compliance/auth fees.",
   },
   {
     id: "elavon",
@@ -331,7 +331,7 @@ export default function Compare() {
     <div className="pt-24 bg-gradient-to-b from-gray-50 via-white to-gray-50 min-h-screen">
       <SEO
         title="Compare UK Card Machine Providers | Phalam Payments UK"
-        description="Dynamic comparison of Clover, Tyl, Elavon, and Zettle terminal costs. Put your monthly turnover in our calculator to accurately compare real merchant fees."
+        description="Dynamic comparison of Clover, Teya, Elavon, and Zettle terminal costs. Put your monthly turnover in our calculator to accurately compare real merchant fees."
         schema={{
           "@context": "https://schema.org",
           "@type": "ProductCollection",
